@@ -1,16 +1,15 @@
 import express from 'express';
-
-import MessageResponse from '../interfaces/MessageResponse';
-import emojis from './emojis';
+import auditRouter from './audit';
 
 const router = express.Router();
 
-router.get<{}, MessageResponse>('/', (req, res) => {
+router.get('/', (req, res) => {
   res.json({
-    message: 'API - 👋🌎🌍🌏',
+    message: "Server is Running"
   });
 });
 
-router.use('/emojis', emojis);
+router.use('/audit', auditRouter);
+
 
 export default router;
