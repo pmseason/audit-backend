@@ -14,9 +14,9 @@ type AuditInput = {
 
 const clientMap = new Map<string, SearchResult[] | undefined>();
 
-router.post('/start', (req, res) => {
+router.post('/start', async (req, res) => {
     const { remoteUrl, searchConfigs } = req.body as AuditInput;
-
+    
     // start audit
     const auditId = Math.random().toString(36).substring(7);
 
@@ -31,9 +31,10 @@ router.post('/start', (req, res) => {
     });
 
     // save client random id in cookie
-    res.cookie('auditId', auditId);
+    // res.cookie('auditId', auditId);
     res.json({
         message: "Audit started",
+        id: auditId
     });
 });
 
