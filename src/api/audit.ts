@@ -1,6 +1,6 @@
 import express from 'express';
 import { MessageResponse } from '../types';
-import { SearchConfig, SearchResult, startAudit } from '@mrinal-c/ai-job-scraper';
+import { SearchConfig, SearchResult, startAudit, getSupportedSources } from '@mrinal-c/ai-job-scraper';
 
 
 const router = express.Router();
@@ -9,6 +9,8 @@ type AuditInput = {
     remoteUrl: string;
     searchConfigs: SearchConfig[]
 }
+
+// https://github.com/puppeteer/puppeteer/issues/2242
 
 const clientMap = new Map<string, SearchResult[] | undefined>();
 
@@ -35,7 +37,7 @@ router.post('/start', (req, res) => {
     });
 });
 
-router.get('/:auditId', (req, res) => {
+router.get('/:auditId/status', (req, res) => {
     // read client id from path
     const auditId = req.params.auditId;
 
@@ -51,5 +53,10 @@ router.get('/:auditId', (req, res) => {
         } as MessageResponse);
     }
 });
+
+router.get('/supported', (req, res) => {
+    const sources = getSupportedSources();
+    res.json(sources);
+})
 
 export default router;

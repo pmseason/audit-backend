@@ -613,10 +613,10 @@
     zod "^3.23.8"
     zod-to-json-schema "^3.23.0"
 
-"@mrinal-c/ai-job-scraper@^1.0.2":
-  version "1.0.2"
-  resolved "https://npm.pkg.github.com/download/@mrinal-c/ai-job-scraper/1.0.2/55724441488a98def5fe9cc7668c44f3dba35411#55724441488a98def5fe9cc7668c44f3dba35411"
-  integrity sha512-2HpFXOAZk8pVZ7y2qUWAQADDBx9JbJo2dJ9+sLkOIGU09+pKGR23XGhTxzu4GG3hqjnC5OR2UYCOZ18MhwrM5w==
+"@mrinal-c/ai-job-scraper@^1.0.5":
+  version "1.0.5"
+  resolved "https://npm.pkg.github.com/download/@mrinal-c/ai-job-scraper/1.0.5/7dcd2df813abdce485e4b096435cb4be75c0660e#7dcd2df813abdce485e4b096435cb4be75c0660e"
+  integrity sha512-PDszY78W1rfwXM2Ns17dMN9ESWi4dG47gWdV9No+HZUEi71AZBrA31D61j5vXG3Jx/9BKNNTRx53aAj2VyGyew==
   dependencies:
     "@mendable/firecrawl-js" "^1.15.7"
     "@supabase/supabase-js" "^2.47.10"
