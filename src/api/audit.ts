@@ -16,7 +16,7 @@ const clientMap = new Map<string, SearchResult[] | undefined>();
 
 router.post('/start', async (req, res) => {
     const { remoteUrl, searchConfigs } = req.body as AuditInput;
-    
+
     // start audit
     const auditId = Math.random().toString(36).substring(7);
 
@@ -24,11 +24,12 @@ router.post('/start', async (req, res) => {
     clientMap.set(auditId, undefined);
 
     // start audit, once done set result in map
-    startAudit(searchConfigs, remoteUrl).then((result) => {
-        clientMap.set(auditId, result);
-    }).catch((err) => {
-        console.error(err);
-    });
+    startAudit(searchConfigs, remoteUrl)
+        .then((result) => {
+            clientMap.set(auditId, result);
+        }).catch((err) => {
+            console.error(err);
+        });
 
     // save client random id in cookie
     // res.cookie('auditId', auditId);
