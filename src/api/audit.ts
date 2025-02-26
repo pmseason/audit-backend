@@ -29,6 +29,7 @@ router.post('/start', async (req, res) => {
             clientMap.set(auditId, result);
         }).catch((err) => {
             console.error(err);
+            clientMap.set(auditId, []);
         });
 
     // save client random id in cookie
