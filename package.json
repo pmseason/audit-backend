@@ -1,6 +1,6 @@
 {
-  "name": "pm-szn",
-  "version": "1.2.0",
+  "name": "audit-backend",
+  "version": "1.0.0",
   "description": " A basic starter for an express.js API with Typescript",
   "main": "src/index.ts",
   "scripts": {
@@ -15,7 +15,7 @@
   "keywords": [],
   "license": "MIT",
   "dependencies": {
-    "@mrinal-c/ai-job-scraper": "^1.0.8",
+    "@pmseason/ai-job-scraper": "^1.0.11",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",

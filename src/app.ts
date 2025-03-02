@@ -2,7 +2,7 @@ import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
-import { configure } from '@mrinal-c/ai-job-scraper';
+import { configure } from '@pmseason/ai-job-scraper';
 
 import * as middlewares from './middlewares';
 import api from './api';

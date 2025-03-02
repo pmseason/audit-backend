@@ -1,43 +1,64 @@
 import express from 'express';
-import { MessageResponse } from '../types';
-import { SearchConfig, SearchResult, startAudit, getSupportedSources } from '@mrinal-c/ai-job-scraper';
+import { SearchConfig, SearchResult, startAudit, getSupportedSources, testConnection } from '@pmseason/ai-job-scraper';
 
 
 const router = express.Router();
 
 type AuditInput = {
-    remoteUrl: string;
+    remoteUrl?: string;
     searchConfigs: SearchConfig[]
+}
+
+type AuditResult = {
+    status: "not-started" | "running" | "completed"
+    error?: string;
+    message?: string;
+    data?: SearchResult[]
 }
 
 // https://github.com/puppeteer/puppeteer/issues/2242
 
-const clientMap = new Map<string, SearchResult[] | undefined>();
+const auditMap = new Map<string, AuditResult>();
 
 router.post('/start', async (req, res) => {
-    const { remoteUrl, searchConfigs } = req.body as AuditInput;
 
-    // start audit
-    const auditId = Math.random().toString(36).substring(7);
+    try {
+        //read body
+        const { remoteUrl, searchConfigs } = req.body as AuditInput;
 
-    // save client random id in client map
-    clientMap.set(auditId, undefined);
+        //test connection to make sure we have a chrome connection
+        const connected = await testConnection(remoteUrl);
 
-    // start audit, once done set result in map
-    startAudit(searchConfigs, remoteUrl)
-        .then((result) => {
-            clientMap.set(auditId, result);
-        }).catch((err) => {
-            console.error(err);
-            clientMap.set(auditId, []);
+        if (!connected) {
+            return res.status(400).json({
+                message: "Not connected to Chrome"
+            })
+        }
+
+        // start audit
+        const auditId = Math.random().toString(36).substring(7);
+
+        // save client random id in client map
+        auditMap.set(auditId, { status: "running" });
+
+        // start audit, once done set result in map
+        startAudit(searchConfigs, remoteUrl)
+            .then((result) => {
+                auditMap.set(auditId, { status: "completed", message: "SUCCESS", data: result });
+            }).catch((err) => {
+                console.error(err);
+                auditMap.set(auditId, { status: "completed", error: err });
+            });
+        res.json({
+            message: "Audit started",
+            id: auditId
         });
-
-    // save client random id in cookie
-    // res.cookie('auditId', auditId);
-    res.json({
-        message: "Audit started",
-        id: auditId
-    });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
 });
 
 router.get('/:auditId/status', (req, res) => {
@@ -45,16 +66,25 @@ router.get('/:auditId/status', (req, res) => {
     const auditId = req.params.auditId;
 
     // get result from map
-    const result = clientMap.get(auditId);
+    const result = auditMap.get(auditId);
 
-    if (result) {
-        clientMap.delete(auditId);
-        res.json(result);
-    } else {
-        res.status(404).json({
-            message: "Invalid ID or Audit is in progress"
-        } as MessageResponse);
+    //check if invalid audit
+    if (!result) {
+        return res.status(404).json({
+            message: "Invalid ID"
+        });
     }
+
+    //extract result status
+    res.json(result);
+
+    //if completed without error, wipe from memory
+    const { status, error } = result;
+    if (status === "completed" && !error) {
+        auditMap.delete(auditId);
+    }
+
+
 });
 
 router.get('/supported', (req, res) => {
