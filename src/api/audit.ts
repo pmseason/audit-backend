@@ -92,4 +92,22 @@ router.get('/supported', (req, res) => {
     res.json(sources);
 })
 
+
+router.get('/test', async (req, res) => {
+    const { remoteUrl, searchConfigs } = req.body;
+
+    //test connection to make sure we have a chrome connection
+    const connected = await testConnection(remoteUrl);
+
+    if (connected) {
+        res.status(200).json({
+            message: "Connected to Chrome"
+        });
+    } else {
+        res.status(400).json({
+            message: "Not connected to Chrome"
+        });
+    }
+});
+
 export default router;
