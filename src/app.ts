@@ -6,8 +6,7 @@ import { configure } from '@pmseason/ai-job-scraper';
 
 import * as middlewares from './middlewares';
 import api from './api';
-
-require('dotenv').config();
+import 'dotenv/config';
 
 const app = express();
 // https://github.com/websockets/ws/issues/1810
