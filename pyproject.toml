@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
     "browser-use>=0.1.48",
     "fastapi[standard]>=0.115.12",
+    "google-cloud-compute>=1.30.0",
     "google-cloud-tasks>=2.19.2",
     "loguru>=0.7.3",
     "prettyprinter>=0.18.0",
