@@ -8,6 +8,10 @@ from browser_use.browser.context import BrowserContext, BrowserContextConfig, Br
 from langchain_anthropic import ChatAnthropic
 from playwright.async_api import Page, BrowserContext as PlaywrightContext
 
+load_dotenv(override=True)
+BB_API_KEY = os.getenv("BB_API_KEY")
+BB_PROJECT_ID = os.getenv("BB_PROJECT_ID")
+
 class ExtendedBrowserSession(BrowserSession):
     """Extended version of BrowserSession that includes current_page"""
     def __init__(
@@ -28,7 +32,7 @@ class UseBrowserbaseContext(BrowserContext):
         """
         playwright_browser = await self.browser.get_playwright_browser()
         context = await self._create_context(playwright_browser)
-        self._add_new_page_listener(context)
+        # self._add_new_page_listener(context)
 
         self.session = ExtendedBrowserSession(
             context=context,
@@ -51,18 +55,32 @@ async def setup_browser() -> tuple[Browser, UseBrowserbaseContext]:
     Returns:
         tuple[Browser, UseBrowserbaseContext]: Configured browser and context.
     """
-    bb = Browserbase(api_key=os.environ["BB_API_KEY"])
+    bb = Browserbase(api_key=BB_API_KEY)
     bb_session = bb.sessions.create(
-        project_id=os.environ["BB_PROJECT_ID"],
+        project_id=BB_PROJECT_ID,
     )
+    
+    # # Basic configuration
+# browser = Browser(
+#     config=BrowserConfig(
+#         headless=False,
+#         disable_security=False,
+#         keep_alive=True,
+#         cdp_url=CDP_URL,
+#         # wss_url=WSS_URL,
+#         new_context_config=BrowserContextConfig(
+# 			keep_alive=True,
+# 			disable_security=False,
+# 		),
+# ))
 
     browser = Browser(config=BrowserConfig(cdp_url=bb_session.connect_url))
-    context = UseBrowserbaseContext(
-        browser,
-        BrowserContextConfig(
-            wait_for_network_idle_page_load_time=10.0,
-            highlight_elements=True,
-        )
-    )
+    # context = UseBrowserbaseContext(
+    #     browser,
+    #     BrowserContextConfig(
+    #         wait_for_network_idle_page_load_time=10.0,
+    #         highlight_elements=True,
+    #     )
+    # )
 
-    return browser, context
+    return browser, None

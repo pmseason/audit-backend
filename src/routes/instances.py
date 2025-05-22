@@ -7,9 +7,9 @@ router = APIRouter(
     tags=["Instances"]
 )
 
-@router.get("/", response_model=List[dict], summary="List Compute Engine instances")
-def get_instances(project_id: str = Query(..., description="GCP Project ID"), zone: str = Query(..., description="GCP Zone")):
+@router.get("/", summary="List Compute Engine instances")
+def get_instances():
     try:
-        return list_instances_controller(project_id, zone)
+        return list_instances_controller()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

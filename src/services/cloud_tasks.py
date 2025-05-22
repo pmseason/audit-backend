@@ -10,7 +10,7 @@ load_dotenv(override=True)
 client = tasks_v2.CloudTasksClient()
 
 # Get configuration from environment variables
-PROJECT_ID = os.getenv("CLOUD_TASKS_PROJECT_ID")
+PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = os.getenv("CLOUD_TASKS_LOCATION")
 QUEUE = os.getenv("CLOUD_TASKS_QUEUE")
 SERVER_URL = os.getenv("SERVER_URL")

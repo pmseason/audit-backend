@@ -1,2 +1,5 @@
 .venv
 .env
+recordings
+__pycache__
+runner.txt
