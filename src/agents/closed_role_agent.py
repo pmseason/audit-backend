@@ -5,6 +5,7 @@ from browser_use import BrowserConfig, Browser, Controller, Agent, BrowserContex
 from pydantic import BaseModel
 from typing import Literal
 from src.agents.agent_logging import record_activity
+from src.services.browserbase import setup_browser
 import os
 
 # Load environment variables
@@ -15,19 +16,19 @@ WSS_URL = os.getenv("WSS_URL")
 # Initialize LLM
 llm = ChatOpenAI(model="gpt-4o-mini")
 
-# Basic configuration
-browser = Browser(
-    config=BrowserConfig(
-        headless=False,
-        disable_security=False,
-        keep_alive=True,
-        cdp_url=CDP_URL,
-        # wss_url=WSS_URL,
-        new_context_config=BrowserContextConfig(
-			keep_alive=True,
-			disable_security=False,
-		),
-))
+# # Basic configuration
+# browser = Browser(
+#     config=BrowserConfig(
+#         headless=False,
+#         disable_security=False,
+#         keep_alive=True,
+#         cdp_url=CDP_URL,
+#         # wss_url=WSS_URL,
+#         new_context_config=BrowserContextConfig(
+# 			keep_alive=True,
+# 			disable_security=False,
+# 		),
+# ))
 
 
 
@@ -69,31 +70,46 @@ async def check_closed_role(url: str):
 	    {'open_tab': {'url': url}},
     ]
     
-    # Initialize browser
+    browser = None
+    context = None
     
-    agent = Agent(
-        task=MESSAGE_CONTEXT,
-        llm=llm,
-        browser=browser,
-        initial_actions=initial_actions,
-        controller=controller,
-        use_vision=False,
-        save_conversation_path="recordings/"
-    )
-    # history = await agent.run(max_steps=3, on_step_end=record_activity)
-    history = await agent.run(max_steps=5)
-    
-    result = history.final_result()
-    screenshot = history.screenshots()[0]
-    tokens = history.total_input_tokens()
-    print(f'Tokens: {tokens}')
-    
-    if result:
-        parsed = ClosedRoleAuditTask.model_validate_json(result)
-        print('\n--------------------------------')
-        print(f'Result:       {parsed.result}')
-        print(f'Justification: {parsed.justification}')
-        return parsed, screenshot
-    else:
-        print('No result')
+    try:
+        # Initialize browser
+        browser, context = await setup_browser()
+        session = await context.get_session()
+        
+        agent = Agent(
+            task=MESSAGE_CONTEXT,
+            llm=llm,
+            browser=browser,
+            browser_context=context,
+            initial_actions=initial_actions,
+            controller=controller,
+            use_vision=False,
+            save_conversation_path="recordings/"
+        )
+        
+        history = await agent.run(max_steps=5)
+        
+        result = history.final_result()
+        screenshot = history.screenshots()[0]
+        tokens = history.total_input_tokens()
+        print(f'Tokens: {tokens}')
+        
+        if result:
+            parsed = ClosedRoleAuditTask.model_validate_json(result)
+            print('\n--------------------------------')
+            print(f'Result:       {parsed.result}')
+            print(f'Justification: {parsed.justification}')
+            return parsed, screenshot
+        else:
+            print('No result')
+            return None, None
+            
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return None, None
+    finally:
+        if browser:
+            await browser.close()
         

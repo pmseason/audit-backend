@@ -1,11 +1,10 @@
 from typing import Iterable
 from google.cloud import compute_v1
-
+import os
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
 # Initialize the client
-client = tasks_v2.CloudTasksClient()
 
 # Get configuration from environment variables
 PROJECT_ID = os.getenv("CLOUD_TASKS_PROJECT_ID")
