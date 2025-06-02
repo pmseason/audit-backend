@@ -19,7 +19,7 @@ async def create_closed_role_audit():
         logger.info(f"Found {len(jobs)} open jobs")
         await clear_closed_role_audit_tasks()
         
-        # Extract job IDs and create audit tasks (default status is PENDING)
+        # Extract job IDs and create audit tasks (default status is NOT_RUN)
         job_ids = [job['id'] for job in jobs]
         await insert_closed_role_audit_tasks(job_ids)
         
@@ -39,7 +39,7 @@ async def start_closed_role_audit(task_ids: List[str]):
             raise HTTPException(status_code=404, detail="No tasks found with the provided IDs")
 
         # Update task status to PENDING
-        await update_task_status(task_ids, AuditStatus.PENDING, "Task is pending")
+        await update_task_status(task_ids, AuditStatus.PENDING, "Task is pending", {"justification": "", "result": "", "screenshot": ""})
         
         # Create a cloud task for each audit task
         task_promises = [

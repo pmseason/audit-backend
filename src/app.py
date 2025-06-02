@@ -45,4 +45,4 @@ app.include_router(instances_router)
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", "8000"))  # Default to port 8000 if not specified
-    uvicorn.run("src.app:app", host="0.0.0.0", port=port, reload=False) 
+    uvicorn.run("src.app:app", host="0.0.0.0", port=port, reload=True) 

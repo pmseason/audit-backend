@@ -5,8 +5,8 @@ from .jobs import Job
 
 
 class AuditStatus(str, Enum):
+    NOT_RUN = "not_run"
     PENDING = "pending"
-    QUEUED = "queued"
     COMPLETED = "completed"
     FAILED = "failed"
     IN_PROGRESS = "in_progress"

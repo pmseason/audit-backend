@@ -1,12 +1,13 @@
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 import asyncio
-from browser_use import BrowserConfig, Browser, Controller, Agent, BrowserContextConfig
-from pydantic import BaseModel
-from typing import Literal
+from browser_use import BrowserConfig, Browser, Controller, Agent, BrowserContextConfig, ActionResult
+from pydantic import BaseModel, Field
+from typing import Literal, Optional
 from src.agents.agent_logging import record_activity
 from src.services.browserbase import setup_browser
 import os
+from playwright.async_api import Page
 
 # Load environment variables
 load_dotenv(override=True)
@@ -16,13 +17,41 @@ WSS_URL = os.getenv("WSS_URL")
 # Initialize LLM
 llm = ChatOpenAI(model="gpt-4o-mini")
 
-
+class DismissPopupParams(BaseModel):
+    accept_css_selector: Optional[str] = Field(
+        default=None,
+        description="CSS selector for the accept/agree button in cookie banners or popups"
+    )
+    dismiss_css_selector: Optional[str] = Field(
+        default=None,
+        description="CSS selector for the dismiss/close button in popups"
+    )
 
 class ClosedRoleAuditTask(BaseModel):
     result: Literal["open", "closed", "unsure"]
     justification: str
 
-controller = Controller(output_model=ClosedRoleAuditTask)
+controller = Controller(output_model=ClosedRoleAuditTask, exclude_actions=["go_to_url"])
+
+@controller.action('Dismiss a cookie banner or popup', param_model=DismissPopupParams)
+async def dismiss_popup(params: DismissPopupParams, page: Page) -> ActionResult:
+    if params.accept_css_selector:
+        try:
+            await page.click(params.accept_css_selector)
+            return ActionResult(extracted_content=f"Clicked accept button using selector: {params.accept_css_selector}")
+        except Exception as e:
+            return ActionResult(extracted_content=f"Failed to click accept button: {str(e)}")
+    
+    if params.dismiss_css_selector:
+        try:
+            await page.click(params.dismiss_css_selector)
+            return ActionResult(extracted_content=f"Clicked dismiss button using selector: {params.dismiss_css_selector}")
+        except Exception as e:
+            return ActionResult(extracted_content=f"Failed to click dismiss button: {str(e)}")
+    
+    return ActionResult(extracted_content="No selectors provided for dismissal")
+
+
 
 
 MESSAGE_CONTEXT = """
@@ -31,6 +60,8 @@ You are a helpful assistant that checks the status of a job posting.
 You will be given a URL to a job posting.
 
 Use the context clues around the page to determine if the role is closed or open.
+
+If there is any cookie banner, you can click the "Accept all" button to close it.
 
 You are to respond with the following structure:
 {
@@ -49,7 +80,7 @@ Some hints that the role is open:
 
 You can scroll through the page to get more context.
 
-If there is any cookie banner, you can click the "Accept all" button to close it.
+
 """
 
 

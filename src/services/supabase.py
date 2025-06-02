@@ -4,12 +4,7 @@ import os
 from enum import Enum
 from loguru import logger
 from postgrest.exceptions import APIError
-
-class AuditStatus(str, Enum):
-    PENDING = "pending"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    FAILED = "failed"
+from src.types.audit import AuditStatus
 
 # Initialize Supabase client
 supabase_url = os.getenv("SUPABASE_URL")
@@ -44,8 +39,8 @@ async def insert_closed_role_audit_tasks(job_ids: List[str]):
     """Insert new closed role audit tasks for given job IDs."""
     tasks = [{
         "job": job_id,
-        "status": AuditStatus.PENDING,
-        "statusMessage": "Task is pending"
+        "status": AuditStatus.NOT_RUN,
+        "statusMessage": "Task has not run"
     } for job_id in job_ids]
     
     try:
@@ -71,8 +66,9 @@ async def get_all_closed_role_audit_tasks():
     """Fetch all closed role audit tasks."""
     try:
         response = supabase.table("closed_role_audit_tasks") \
-            .select("*, job(*, company(*))") \
+            .select("*, job(*, company(*, logo(*)))") \
             .execute()
+            
         return response.data
     except APIError as e:
         raise Exception(f"Error fetching all closed role audit tasks: {str(e)}")
