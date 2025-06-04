@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, List
 from .jobs import Job
 
 
@@ -22,18 +22,6 @@ class ClosedRoleAuditTask:
     result: Literal["open", "closed", "unsure"]
     justification: str
     screenshot: str 
-    
-    
-
-@dataclass
-class OpenRoleAuditTask:
-    id: int
-    url: str
-    extra_notes: str
-    status: AuditStatus
-    status_message: str
-    updated_at: str
-    created_at: str
 
 
 @dataclass
@@ -43,8 +31,23 @@ class ScrapedJob:
     company: str
     location: str
     description: str
-    task: OpenRoleAuditTask
+    task: int
     url: str
     other: str 
+    
+
+@dataclass
+class OpenRoleAuditTask:
+    id: int
+    url: str
+    extra_notes: str
+    status: AuditStatus
+    status_message: str
+    scraped_jobs: List[ScrapedJob]
+    updated_at: str
+    created_at: str
+
+
+
     
     

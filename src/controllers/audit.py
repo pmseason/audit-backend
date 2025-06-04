@@ -9,7 +9,9 @@ from ..services.supabase import (
     get_all_closed_role_audit_tasks,
     get_all_open_role_audit_tasks,
     insert_open_role_audit_task,
-    update_task_status
+    update_closed_role_task_status,
+    get_open_role_audit_tasks_by_ids,
+    update_open_role_task_status
 )
 from ..services.cloud_tasks import create_task
 from ..types.audit import AuditStatus
@@ -41,7 +43,7 @@ async def start_closed_role_audit(task_ids: List[str]):
             raise HTTPException(status_code=404, detail="No tasks found with the provided IDs")
 
         # Update task status to PENDING
-        await update_task_status(task_ids, AuditStatus.PENDING, "Task is pending", {"justification": "", "result": "", "screenshot": ""})
+        await update_closed_role_task_status(task_ids, AuditStatus.PENDING, "Task is pending", {"justification": "", "result": "", "screenshot": ""})
         
         # Create a cloud task for each audit task
         task_promises = [
@@ -93,4 +95,38 @@ async def add_open_role_audit_task(url: str, extra_notes: Optional[str] = None):
         raise
     except Exception as error:
         print(f"Error adding open role audit task: {error}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+async def start_open_role_audit(task_ids: List[str]):
+    try:
+
+        tasks = await get_open_role_audit_tasks_by_ids(task_ids)
+
+        if not tasks:
+            raise HTTPException(status_code=404, detail="No tasks found with the provided IDs")
+
+        # Update task status to PENDING
+        await update_open_role_task_status(task_ids, AuditStatus.PENDING, "Task is pending")
+
+        # Create a cloud task for each audit task
+        task_promises = [
+            create_task({
+                "type": "OPEN_ROLE_AUDIT",
+                "taskId": task["id"],
+                "url": task["url"],
+                "extra_notes": task["extra_notes"]
+            })
+            for task in tasks
+        ]
+        
+        await asyncio.gather(*task_promises)
+        
+        return {
+            "message": "Open role audit started successfully",
+            "tasksCount": len(tasks)
+        }
+    except HTTPException:
+        raise
+    except Exception as error:
+        print(f"Error starting open role audit: {error}")
         raise HTTPException(status_code=500, detail="Internal server error") 

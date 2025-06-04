@@ -73,7 +73,7 @@ async def get_all_closed_role_audit_tasks():
     except APIError as e:
         raise Exception(f"Error fetching all closed role audit tasks: {str(e)}")
 
-async def update_task_status(task_ids: List[str], status: AuditStatus, status_message: str, additional_payload: dict = None):
+async def update_closed_role_task_status(task_ids: List[str], status: AuditStatus, status_message: str, additional_payload: dict = None):
     """
     Update task status and optionally additional fields for specific tasks.
     
@@ -118,11 +118,24 @@ async def update_task_status(task_ids: List[str], status: AuditStatus, status_me
 async def get_all_open_role_audit_tasks():
     """Fetch all open role audit tasks."""
     try:
-        response = supabase.table("open_role_audit_tasks") \
+        response_1 = supabase.table("open_role_audit_tasks") \
             .select("*") \
             .execute()
             
-        return response.data
+        tasks = response_1.data
+        
+        response_2 = supabase.table("scraped_jobs") \
+            .select("*") \
+            .in_("task", [task["id"] for task in tasks]) \
+            .execute()
+            
+        scraped_jobs = response_2.data
+        
+        for task in tasks:
+            task["scraped_jobs"] = [scraped_job for scraped_job in scraped_jobs if scraped_job["task"] == task["id"]]
+            
+        return tasks
+        
     except APIError as e:
         raise Exception(f"Error fetching all open role audit tasks: {str(e)}")
 
@@ -142,3 +155,55 @@ async def insert_open_role_audit_task(url: str, extra_notes: str = None):
         return response.data
     except APIError as e:
         raise Exception(f"Error inserting open role audit task: {str(e)}")
+
+
+async def get_open_role_audit_tasks_by_ids(task_ids: List[str]):
+    """Fetch open role audit tasks by their IDs."""
+    try:
+        response = supabase.table("open_role_audit_tasks") \
+            .select("*") \
+            .in_("id", task_ids) \
+            .execute()
+        return response.data
+    except APIError as e:
+        raise Exception(f"Error fetching open role audit tasks by IDs: {str(e)}")
+    
+    
+async def update_open_role_task_status(task_ids: List[str], status: AuditStatus, status_message: str, extra_data: dict = None):
+    """Update status and related fields for open role audit tasks.
+    
+    Args:
+        task_ids: List of task IDs to update
+        status: New AuditStatus value
+        status_message: Status message to set
+        extra_data: Optional dict of additional fields to update
+    """
+    try:
+        update_data = {
+            "status": status,
+            "status_message": status_message
+        }
+        
+        if extra_data:
+            update_data.update(extra_data)
+            
+        response = supabase.table("open_role_audit_tasks") \
+            .update(update_data) \
+            .in_("id", task_ids) \
+            .execute()
+            
+        return response.data
+    except APIError as e:
+        raise Exception(f"Error updating task status: {str(e)}")
+
+async def insert_scraped_jobs(jobs: List[dict], task_id: int):
+    """Insert scraped jobs for a specific task."""
+    try:
+        jobs_with_task = [{**job, "task": task_id} for job in jobs]
+        
+        response = supabase.table("scraped_jobs") \
+            .insert(jobs_with_task) \
+            .execute()
+        return response.data
+    except APIError as e:
+        raise Exception(f"Error inserting scraped jobs: {str(e)}")

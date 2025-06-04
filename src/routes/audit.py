@@ -6,7 +6,8 @@ from src.controllers.audit import (
     start_closed_role_audit,
     get_closed_role_audit_tasks,
     get_open_role_audit_tasks,
-    add_open_role_audit_task
+    add_open_role_audit_task,
+    start_open_role_audit
 )
 
 router = APIRouter(
@@ -20,6 +21,9 @@ class StartClosedRoleAuditRequest(BaseModel):
 class AddOpenRoleAuditRequest(BaseModel):
     url: str
     extra_notes: Optional[str] = None
+
+class StartOpenRoleAuditRequest(BaseModel):
+    taskIds: List[int]
 
 @router.post("/create/closed", 
     summary="Create a closed role audit",
@@ -77,4 +81,19 @@ async def get_open_role_audit_tasks_route():
     }
 )
 async def add_open_role_audit_task_route(request: AddOpenRoleAuditRequest):
-    return await add_open_role_audit_task(request.url, request.extra_notes) 
+    return await add_open_role_audit_task(request.url, request.extra_notes)
+
+@router.post("/start/open",
+    summary="Start open role audit",
+    description="Creates cloud tasks for specified open role audit tasks",
+    responses={
+        200: {"description": "Open role audit started successfully"},
+        400: {"description": "Invalid request - taskIds must be an array of integers"},
+        404: {"description": "No tasks found with the provided IDs"},
+        500: {"description": "Internal server error"}
+    }
+)
+async def start_open_role_audit_route(request: StartOpenRoleAuditRequest):
+    return await start_open_role_audit(request.taskIds)
+
+

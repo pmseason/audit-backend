@@ -1,10 +1,11 @@
 from loguru import logger
 from src.types.tasks import TaskRequest
-from src.services.supabase import update_task_status
+from src.services.supabase import update_closed_role_task_status, update_open_role_task_status, insert_scraped_jobs
 from src.types.audit import AuditStatus
 from src.agents.closed_role_agent import check_closed_role
+from src.agents.open_role_agent import find_open_roles
 
-async def handle_task(task_request: TaskRequest):
+async def handle_closed_role_audit_task(task_request: TaskRequest):
     """
     Handles the execution of a task, including status updates and result processing
     
@@ -17,7 +18,7 @@ async def handle_task(task_request: TaskRequest):
     """
     try:
         logger.info(f"Starting task processing for taskId: {task_request.taskId}")
-        await update_task_status([task_request.taskId], AuditStatus.IN_PROGRESS, "Task is running")
+        await update_closed_role_task_status([task_request.taskId], AuditStatus.IN_PROGRESS, "Task is running")
         
         # Log that we would check role here
         response = await check_closed_role(task_request.url)
@@ -28,7 +29,7 @@ async def handle_task(task_request: TaskRequest):
         result, screenshot = response
         
         # Log task completion
-        await update_task_status([task_request.taskId], AuditStatus.COMPLETED, "Task is complete", {
+        await update_closed_role_task_status([task_request.taskId], AuditStatus.COMPLETED, "Task is complete", {
             "result": result.result,
             "justification": result.justification,
             "screenshot": screenshot
@@ -40,5 +41,41 @@ async def handle_task(task_request: TaskRequest):
     except Exception as error:
         error_message = str(error)
         logger.error(f"Error processing task {task_request.taskId}: {error_message}")
-        await update_task_status([task_request.taskId], AuditStatus.FAILED, error_message)
-        raise Exception(error_message) 
+        await update_closed_role_task_status([task_request.taskId], AuditStatus.FAILED, error_message)
+        raise Exception(error_message)
+    
+async def handle_open_role_audit_task(task_request: TaskRequest):
+    """
+    Handles the execution of an open role audit task, including status updates and result processing
+    
+    Args:
+        task_request (TaskRequest): Request object containing:
+            - type: string - Type of task 
+            - url: string - URL to be processed
+            - taskId: string - ID of the task
+            - extra_notes: string - Optional additional notes
+    """
+    try:
+        logger.info(f"Starting open role audit task processing for taskId: {task_request.taskId}")
+        await update_open_role_task_status([task_request.taskId], AuditStatus.IN_PROGRESS, "Task is running")
+        
+        response = await find_open_roles(task_request.url)
+        
+        if not response:
+            raise Exception("No result from find_open_roles")
+            
+        jobs = response
+        
+        await insert_scraped_jobs(jobs, task_request.taskId)
+        
+        # Log task completion
+        await update_open_role_task_status([task_request.taskId], AuditStatus.COMPLETED, "Task is complete")
+        
+        logger.success(f"Open role audit task {task_request.taskId} completed successfully")
+        return {"message": "Task completed successfully"}
+
+    except Exception as error:
+        error_message = str(error)
+        logger.error(f"Error processing open role audit task {task_request.taskId}: {error_message}")
+        await update_open_role_task_status([task_request.taskId], AuditStatus.FAILED, error_message)
+        raise Exception(error_message)
