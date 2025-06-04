@@ -11,7 +11,8 @@ from ..services.supabase import (
     insert_open_role_audit_task,
     update_closed_role_task_status,
     get_open_role_audit_tasks_by_ids,
-    update_open_role_task_status
+    update_open_role_task_status,
+    delete_open_role_audit_task
 )
 from ..services.cloud_tasks import create_task
 from ..types.audit import AuditStatus
@@ -129,4 +130,20 @@ async def start_open_role_audit(task_ids: List[str]):
         raise
     except Exception as error:
         print(f"Error starting open role audit: {error}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+async def delete_open_role_audit_task_controller(task_id: int):
+    try:
+        # First check if task exists
+        tasks = await get_open_role_audit_tasks_by_ids([task_id])
+        if not tasks:
+            raise HTTPException(status_code=404, detail="Task not found")
+            
+        # Delete the task
+        await delete_open_role_audit_task(task_id)
+        return {"message": "Open role audit task deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as error:
+        print(f"Error deleting open role audit task: {error}")
         raise HTTPException(status_code=500, detail="Internal server error") 

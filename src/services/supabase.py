@@ -207,3 +207,14 @@ async def insert_scraped_jobs(jobs: List[dict], task_id: int):
         return response.data
     except APIError as e:
         raise Exception(f"Error inserting scraped jobs: {str(e)}")
+
+async def delete_open_role_audit_task(task_id: int):
+    """Delete an open role audit task by its ID."""
+    try:
+        response = supabase.table("open_role_audit_tasks") \
+            .delete() \
+            .eq("id", task_id) \
+            .execute()
+        return response.data
+    except APIError as e:
+        raise Exception(f"Error deleting open role audit task: {str(e)}")

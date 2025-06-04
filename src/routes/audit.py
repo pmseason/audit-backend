@@ -7,7 +7,8 @@ from src.controllers.audit import (
     get_closed_role_audit_tasks,
     get_open_role_audit_tasks,
     add_open_role_audit_task,
-    start_open_role_audit
+    start_open_role_audit,
+    delete_open_role_audit_task_controller
 )
 
 router = APIRouter(
@@ -95,5 +96,17 @@ async def add_open_role_audit_task_route(request: AddOpenRoleAuditRequest):
 )
 async def start_open_role_audit_route(request: StartOpenRoleAuditRequest):
     return await start_open_role_audit(request.taskIds)
+
+@router.delete("/open/{task_id}",
+    summary="Delete an open role audit task",
+    description="Deletes a specific open role audit task by its ID",
+    responses={
+        200: {"description": "Open role audit task deleted successfully"},
+        404: {"description": "Task not found"},
+        500: {"description": "Internal server error"}
+    }
+)
+async def delete_open_role_audit_task_route(task_id: int):
+    return await delete_open_role_audit_task_controller(task_id)
 
 
