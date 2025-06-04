@@ -114,3 +114,31 @@ async def update_task_status(task_ids: List[str], status: AuditStatus, status_me
 #         return response.data
 #     except APIError as e:
 #         raise Exception(f"Error updating audit results: {str(e)}")
+
+async def get_all_open_role_audit_tasks():
+    """Fetch all open role audit tasks."""
+    try:
+        response = supabase.table("open_role_audit_tasks") \
+            .select("*") \
+            .execute()
+            
+        return response.data
+    except APIError as e:
+        raise Exception(f"Error fetching all open role audit tasks: {str(e)}")
+
+async def insert_open_role_audit_task(url: str, extra_notes: str = None):
+    """Insert a new open role audit task."""
+    task = {
+        "url": url,
+        "status": AuditStatus.NOT_RUN,
+        "status_message": "Task has not run",
+        "extra_notes": extra_notes
+    }
+    
+    try:
+        response = supabase.table("open_role_audit_tasks") \
+            .insert(task) \
+            .execute()
+        return response.data
+    except APIError as e:
+        raise Exception(f"Error inserting open role audit task: {str(e)}")

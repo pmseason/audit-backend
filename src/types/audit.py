@@ -24,3 +24,27 @@ class ClosedRoleAuditTask:
     screenshot: str 
     
     
+
+@dataclass
+class OpenRoleAuditTask:
+    id: int
+    url: str
+    extra_notes: str
+    status: AuditStatus
+    status_message: str
+    updated_at: str
+    created_at: str
+
+
+@dataclass
+class ScrapedJob:
+    id: int
+    title: str
+    company: str
+    location: str
+    description: str
+    task: OpenRoleAuditTask
+    url: str
+    other: str 
+    
+    

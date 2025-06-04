@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import HTTPException
 from loguru import logger
 from ..services.supabase import (
@@ -7,6 +7,8 @@ from ..services.supabase import (
     insert_closed_role_audit_tasks,
     get_closed_role_audit_tasks_by_ids,
     get_all_closed_role_audit_tasks,
+    get_all_open_role_audit_tasks,
+    insert_open_role_audit_task,
     update_task_status
 )
 from ..services.cloud_tasks import create_task
@@ -70,4 +72,25 @@ async def get_closed_role_audit_tasks():
         return tasks
     except Exception as error:
         print(f"Error fetching closed role audit tasks: {error}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+async def get_open_role_audit_tasks():
+    try:
+        tasks = await get_all_open_role_audit_tasks()
+        return tasks
+    except Exception as error:
+        print(f"Error fetching open role audit tasks: {error}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+async def add_open_role_audit_task(url: str, extra_notes: Optional[str] = None):
+    try:
+        if not url:
+            raise HTTPException(status_code=400, detail="URL is required")
+            
+        task = await insert_open_role_audit_task(url, extra_notes)
+        return task
+    except HTTPException:
+        raise
+    except Exception as error:
+        print(f"Error adding open role audit task: {error}")
         raise HTTPException(status_code=500, detail="Internal server error") 
