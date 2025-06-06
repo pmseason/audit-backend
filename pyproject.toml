@@ -9,6 +9,7 @@ dependencies = [
     "browserbase>=1.4.0",
     "fastapi[standard]>=0.115.12",
     "google-cloud-compute>=1.30.0",
+    "google-cloud-storage>=3.1.0",
     "google-cloud-tasks>=2.19.2",
     "loguru>=0.7.3",
     "prettyprinter>=0.18.0",

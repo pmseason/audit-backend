@@ -1,6 +1,7 @@
 from enum import Enum
 from dataclasses import dataclass
 from typing import Literal, List
+from pydantic import BaseModel, Field
 from .jobs import Job
 
 

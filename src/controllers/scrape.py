@@ -3,6 +3,9 @@ from src.agents.open_role_agent import find_open_roles
 from src.agents.url_extraction_agent import URLExtractionAgent
 import os
 from markdownify import markdownify as md
+from src.services.cloud_storage import upload_file_to_bucket
+from src.services.playwright import extract_page_content
+from src.agents.job_data_agent import JobDataAgent
 
 async def start_scrape_role():
     # fetch companies with defined urls
@@ -36,53 +39,48 @@ async def start_scrape_role():
         "career_page_link": "https://www.yelp.careers/us/en/search-results?keywords=product"
     }
     ]
-    
-    # for each company, call agent to scrape the role --> extract [{title, link}]
-    for company in companies_to_scrape:
-        try:
-            response = await find_open_roles(company["career_page_link"])
-            
-            if not response:
-                print(f"No response received for {company['name']}")
-                continue
-            
-            html = response.get("html", "")
-            
-            if not html:
-                print(f"No HTML content received for {company['name']}")
-                continue
-            
-            os.makedirs("html_outputs", exist_ok=True)
-            os.makedirs("markdown_outputs", exist_ok=True)
-            filename = f"html_outputs/{company['name']}.html"
-            markdown_filename = f"markdown_outputs/{company['name']}.md"
-                
-            # Write HTML content to file
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(html)
-            
-            # Convert HTML to Markdown - include common job listing tags
-            markdown_content = md(html, convert=['a', 'button', 'div', 'span', 'li', 'h1', 'h2', 'h3', 'h4', 'p', 'tr'])
-            
-            # Write Markdown content to file
-            with open(markdown_filename, "w", encoding="utf-8") as f:
-                f.write(markdown_content)
-
         
-            # url_extraction_agent = URLExtractionAgent()
-            # response = url_extraction_agent.extract_job_links(html, company["career_page_link"])
-            # if not response:
-            #     print(f"No job links found for {company['name']} at url {company['career_page_link']}")
-            #     continue
-                
-            # job_postings = response.job_postings
+        
+        
+async def get_job_postings(url: str):
+    try:
+        html, markdown_content = await find_open_roles(url)
+        
+        if not html or not markdown_content:
+            print(f"No response received for {url}")
+            return
+        
+        url_extraction_agent = URLExtractionAgent()
+        response = url_extraction_agent.extract_job_links(markdown_content, url)
             
-            # print(f"Found {len(job_postings)} job links for {company['name']} at url {company['career_page_link']}")
-            # print(job_postings)
+        job_postings = response.job_postings if response else []
+        
+        scraped_jobs = []
+        
+        for job_posting in job_postings:
+            html, markdown_content = await extract_page_content(job_posting)
+            if not html or not markdown_content:
+                print(f"No response received for {job_posting}")
+                continue
             
-        except Exception as e:
-            print(f"Error processing {company['name']}: {str(e)}")
-            continue
+            job_data_agent = JobDataAgent()
+            response = job_data_agent.extract_job_data(markdown_content, job_posting)
+            job =  {
+                "title": response.title,
+                "location": response.location,
+                "url": job_posting,
+                "description": response.description,
+                "company": response.company,
+                "other": response.other
+            } if response else None
+            if job:
+                scraped_jobs.append(job)
+            
+        return scraped_jobs
+        
+    except Exception as e:
+        print(f"Error processing {url}: {str(e)}")
+        return []
     
     
     

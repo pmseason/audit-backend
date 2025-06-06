@@ -4,6 +4,7 @@ from src.services.supabase import update_closed_role_task_status, update_open_ro
 from src.types.audit import AuditStatus
 from src.agents.closed_role_agent import check_closed_role
 from src.agents.open_role_agent import find_open_roles
+from src.controllers.scrape import get_job_postings
 
 async def handle_closed_role_audit_task(task_request: TaskRequest):
     """
@@ -59,14 +60,12 @@ async def handle_open_role_audit_task(task_request: TaskRequest):
         logger.info(f"Starting open role audit task processing for taskId: {task_request.taskId}")
         await update_open_role_task_status([task_request.taskId], AuditStatus.IN_PROGRESS, "Task is running")
         
-        response = await find_open_roles(task_request.url)
+        scraped_jobs = await get_job_postings(task_request.url)
         
-        if not response:
-            raise Exception("No result from find_open_roles")
+        if not scraped_jobs:
+            raise Exception("No result from get_job_postings")
             
-        jobs = response.scraped_jobs
-        
-        await insert_scraped_jobs(jobs, task_request.taskId)
+        await insert_scraped_jobs(scraped_jobs, task_request.taskId)
         
         # Log task completion
         await update_open_role_task_status([task_request.taskId], AuditStatus.COMPLETED, "Task is complete")

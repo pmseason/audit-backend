@@ -17,20 +17,20 @@ class URLExtractionAgent:
         """Initialize the URL extraction agent."""
         self.client = openai.OpenAI()
         
-    def extract_job_links(self, html_content: str, source_url: str) -> JobLinks:
+    def extract_job_links(self, markdown_content: str, source_url: str) -> JobLinks:
         """
-        Extract job-related links from HTML content.
+        Extract job-related links from Markdown content.
         
         Args:
-            html_content (str): The HTML content to analyze
-            source_url (str): The source URL of the HTML content
+            markdown_content (str): The Markdown content to analyze
+            source_url (str): The source URL of the Markdown content
             
         Returns:
             JobLinks: A Pydantic model containing categorized job links
         """
         # Prepare the prompt for OpenAI
         prompt = f"""
-        Analyze the following HTML content and extract all job or application links. 
+        Analyze the following Markdown content and extract all job or application links. 
         Source URL: {source_url}
         
         Rules:
@@ -39,8 +39,8 @@ class URLExtractionAgent:
         3. Categorize the links into:
            - job_postings: Direct links to job postings
         
-        HTML Content:
-        {html_content}
+        Markdown Content:
+        {markdown_content}
         """
         
         try:
