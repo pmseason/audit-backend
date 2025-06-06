@@ -108,5 +108,3 @@ async def start_open_role_audit_route(request: StartOpenRoleAuditRequest):
 )
 async def delete_open_role_audit_task_route(task_id: int):
     return await delete_open_role_audit_task_controller(task_id)
-
-

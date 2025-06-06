@@ -11,8 +11,6 @@ from playwright.async_api import Page
 
 # Load environment variables
 load_dotenv(override=True)
-CDP_URL = os.getenv("CDP_URL", "http://localhost:9222")
-WSS_URL = os.getenv("WSS_URL")
 
 # Initialize LLM
 llm = ChatOpenAI(model="gpt-4o-mini")

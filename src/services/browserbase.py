@@ -36,7 +36,7 @@ class UseBrowserbaseContext(BrowserContext):
 
         self.session = ExtendedBrowserSession(
             context=context,
-            cached_state=None,
+            cached_state=None
         )
 
         # Get existing page or create new one

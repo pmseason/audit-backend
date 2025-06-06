@@ -218,3 +218,19 @@ async def delete_open_role_audit_task(task_id: int):
         return response.data
     except APIError as e:
         raise Exception(f"Error deleting open role audit task: {str(e)}")
+    
+    
+async def get_companies_with_career_page_urls():
+    """Get all companies that have career page URLs defined.
+    
+    Returns:
+        List of company records with non-null career_page_link fields
+    """
+    try:
+        response = supabase.table("companies") \
+            .select("*") \
+            .neq("career_page_link", None) \
+            .execute()
+        return response.data
+    except APIError as e:
+        raise Exception(f"Error fetching companies: {str(e)}")

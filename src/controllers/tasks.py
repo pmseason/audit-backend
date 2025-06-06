@@ -64,7 +64,7 @@ async def handle_open_role_audit_task(task_request: TaskRequest):
         if not response:
             raise Exception("No result from find_open_roles")
             
-        jobs = response
+        jobs = response.scraped_jobs
         
         await insert_scraped_jobs(jobs, task_request.taskId)
         
