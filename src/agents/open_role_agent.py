@@ -13,6 +13,7 @@ import os
 from playwright.async_api import Page
 from playwright.sync_api import sync_playwright, Playwright
 from browserbase import Browserbase
+from src.utils.utils import sanitize_url_for_filename
 
 # Load environment variables
 load_dotenv(override=True)
@@ -76,22 +77,6 @@ async def on_step_end(agent: Agent):
     if current_url != previous_url:
         # Store only the current HTML per page
         agent.html = html
-
-def sanitize_url_for_filename(url: str) -> str:
-    """
-    Sanitize a URL to be used as a filename by replacing forward slashes and other unsafe characters.
-    
-    Args:
-        url (str): The URL to sanitize
-        
-    Returns:
-        str: A sanitized string safe for use in filenames
-    """
-    # Replace forward slashes with underscores
-    sanitized = url.replace('/', '_')
-    # Remove any other potentially problematic characters
-    sanitized = re.sub(r'[^a-zA-Z0-9_\-\.]', '_', sanitized)
-    return sanitized
 
 async def find_open_roles(url: str):
     initial_actions = [

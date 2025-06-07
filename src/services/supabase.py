@@ -218,6 +218,24 @@ async def delete_open_role_audit_task(task_id: int):
         return response.data
     except APIError as e:
         raise Exception(f"Error deleting open role audit task: {str(e)}")
+
+async def delete_scraped_jobs_by_task_id(task_id: int):
+    """Delete all scraped jobs associated with a specific task ID.
+    
+    Args:
+        task_id: The ID of the task whose scraped jobs should be deleted
+        
+    Returns:
+        The deleted records
+    """
+    try:
+        response = supabase.table("scraped_jobs") \
+            .delete() \
+            .eq("task", task_id) \
+            .execute()
+        return response.data
+    except APIError as e:
+        raise Exception(f"Error deleting scraped jobs: {str(e)}")
     
     
 async def get_companies_with_career_page_urls():

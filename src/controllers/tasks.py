@@ -1,10 +1,10 @@
 from loguru import logger
 from src.types.tasks import TaskRequest
-from src.services.supabase import update_closed_role_task_status, update_open_role_task_status, insert_scraped_jobs
+from src.services.supabase import update_closed_role_task_status, update_open_role_task_status, insert_scraped_jobs, delete_scraped_jobs_by_task_id
 from src.types.audit import AuditStatus
 from src.agents.closed_role_agent import check_closed_role
 from src.agents.open_role_agent import find_open_roles
-from src.controllers.scrape import get_job_postings
+from src.utils.scrape import get_job_postings
 
 async def handle_closed_role_audit_task(task_request: TaskRequest):
     """
@@ -58,14 +58,15 @@ async def handle_open_role_audit_task(task_request: TaskRequest):
     """
     try:
         logger.info(f"Starting open role audit task processing for taskId: {task_request.taskId}")
+        await delete_scraped_jobs_by_task_id(task_request.taskId)
         await update_open_role_task_status([task_request.taskId], AuditStatus.IN_PROGRESS, "Task is running")
         
-        scraped_jobs = await get_job_postings(task_request.url)
+        scraped_jobs = await get_job_postings(task_request.url, task_request.taskId)
         
         if not scraped_jobs:
             raise Exception("No result from get_job_postings")
             
-        await insert_scraped_jobs(scraped_jobs, task_request.taskId)
+        # await insert_scraped_jobs(scraped_jobs, task_request.taskId)
         
         # Log task completion
         await update_open_role_task_status([task_request.taskId], AuditStatus.COMPLETED, "Task is complete")

@@ -6,6 +6,7 @@ from markdownify import markdownify as md
 from src.services.cloud_storage import upload_file_to_bucket
 from src.services.playwright import extract_page_content
 from src.agents.job_data_agent import JobDataAgent
+from src.services.supabase import insert_scraped_jobs
 
 async def start_scrape_role():
     # fetch companies with defined urls
@@ -42,7 +43,7 @@ async def start_scrape_role():
         
         
         
-async def get_job_postings(url: str):
+async def get_job_postings(url: str, taskId: str):
     try:
         html, markdown_content = await find_open_roles(url)
         
@@ -75,6 +76,7 @@ async def get_job_postings(url: str):
             } if response else None
             if job:
                 scraped_jobs.append(job)
+                await insert_scraped_jobs([job], taskId)
             
         return scraped_jobs
         
