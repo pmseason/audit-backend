@@ -7,48 +7,18 @@ from src.services.cloud_storage import upload_file_to_bucket
 from src.services.playwright import extract_page_content
 from src.agents.job_data_agent import JobDataAgent
 from src.services.supabase import insert_scraped_jobs
+from loguru import logger
 
-async def start_scrape_role():
-    # fetch companies with defined urls
-    companies_to_scrape = [
-    #     {
-    #     "name": "Roblox_0",
-    #     "career_page_link": "https://careers.roblox.com/jobs?search=product&page=1&pageSize=9"
-    # },
-    #                        {
-    #     "name": "Roblox_1",
-    #     "career_page_link": "https://careers.roblox.com/jobs?search=product&page=2&pageSize=9"
-    # },
-    #                        {
-    #     "name": "Roblox_2",
-    #     "career_page_link": "https://careers.roblox.com/jobs?search=product&page=3&pageSize=9"
-    # },
-    # {
-    #     "name": "Uber",
-    #     "career_page_link": "https://www.uber.com/us/en/careers/list/?query=product"
-    # },
-    # {
-    #     "name": "Corsair",
-    #     "career_page_link": "https://edix.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs?keyword=product&lastSelectedFacet=LOCATIONS&selectedLocationsFacet=300000000361862"
-    # }
-    # {
-    #     "name": "Zoom",
-    #     "career_page_link": "https://careers.zoom.us/jobs/search?query=product"
-    # },
-    {
-        "name": "Yelp",
-        "career_page_link": "https://www.yelp.careers/us/en/search-results?keywords=product"
-    }
-    ]
+
         
         
         
-async def get_job_postings(url: str, taskId: str):
+async def get_job_postings(url: str, taskId: str = None):
     try:
         html, markdown_content = await find_open_roles(url)
         
         if not html or not markdown_content:
-            print(f"No response received for {url}")
+            logger.error(f"No response received for {url}")
             return
         
         url_extraction_agent = URLExtractionAgent()
@@ -61,7 +31,7 @@ async def get_job_postings(url: str, taskId: str):
         for job_posting in job_postings:
             html, markdown_content = await extract_page_content(job_posting)
             if not html or not markdown_content:
-                print(f"No response received for {job_posting}")
+                logger.error(f"No response received for {job_posting}")
                 continue
             
             job_data_agent = JobDataAgent()
@@ -81,7 +51,7 @@ async def get_job_postings(url: str, taskId: str):
         return scraped_jobs
         
     except Exception as e:
-        print(f"Error processing {url}: {str(e)}")
+        logger.error(f"Error processing {url}: {str(e)}")
         return []
     
     

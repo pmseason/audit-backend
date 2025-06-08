@@ -1,11 +1,8 @@
 from browserbase import Browserbase
 from playwright.async_api import async_playwright, Playwright
-from markdownify import markdownify as md
 import os
-import re
-from src.services.cloud_storage import upload_file_to_bucket
-from src.utils.utils import sanitize_url_for_filename
-
+from src.utils.utils import get_markdown_content
+from loguru import logger
 
 async def extract_page_content(url: str):
     """
@@ -35,30 +32,16 @@ async def extract_page_content(url: str):
             
             # Get the HTML content
             html = await page.content()
+            return await get_markdown_content(html, url)
             
-            # Strip unwanted tags
-            html = re.sub(r'<(script|img|head|style|footer)[^>]*>.*?</\1>|<(script|img|head|style|footer)[^>]*?/>', '', html, flags=re.DOTALL)
-            
-            # Convert HTML to Markdown
-            markdown_content = md(html, convert=['a', 'button', 'div', 'span', 'li', 'h1', 'h2', 'h3', 'h4', 'p', 'tr'])
-            
-            # Upload files to cloud storage
-            sanitized_url = sanitize_url_for_filename(url)
-            filename = f"job_extraction/{sanitized_url}.html"
-            markdown_filename = f"job_extraction/{sanitized_url}.md"
-            
-            await upload_file_to_bucket(filename, html, "text/html")
-            await upload_file_to_bucket(markdown_filename, markdown_content, "text/markdown")
-            
-            return html, markdown_content
         except Exception as e:
-            print(f"Error extracting page content: {str(e)}")
-            return None, None
+            logger.error(f"Error extracting page content: {str(e)}")
+            return None
             
         finally:
             await page.close()
             await browser.close()
-            print(f"Session complete! View replay at https://browserbase.com/sessions/{session.id}")
+            logger.info(f"Session complete! View replay at https://browserbase.com/sessions/{session.id}")
 
     async with async_playwright() as playwright:
         return await run(playwright)

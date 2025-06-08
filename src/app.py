@@ -4,15 +4,10 @@ from dotenv import load_dotenv
 import os
 from loguru import logger
 import sys
+from src.utils.logging_config import setup_logging
 
-# Configure loguru
-logger.remove()  # Remove default handler
-logger.add(
-    sys.stdout,
-    colorize=True,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-    level="INFO"
-)
+# Configure logging
+# run_id = setup_logging()
 
 # Load environment variables
 load_dotenv(override=True)
@@ -36,13 +31,15 @@ app.add_middleware(
 )
 
 # Import and include routers
-from src.routes import index_router, tasks, audit, instances_router
+from src.routes import index_router, tasks, audit, instances_router, scrape
 
 app.include_router(index_router)
 app.include_router(tasks.router)
 app.include_router(audit.router)
 app.include_router(instances_router)
+app.include_router(scrape.router)
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", "8000"))  # Default to port 8000 if not specified
-    uvicorn.run("src.app:app", host="0.0.0.0", port=port, reload=True) 
+    hot_reload = os.getenv("HOT_RELOAD", "false").lower() == "true"
+    uvicorn.run("src.app:app", host="0.0.0.0", port=port, reload=hot_reload) 

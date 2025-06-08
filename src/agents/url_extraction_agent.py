@@ -5,6 +5,7 @@ import re
 from dotenv import load_dotenv
 import os
 from pydantic import BaseModel, Field
+from loguru import logger
 
 load_dotenv(override=True)
 
@@ -65,5 +66,5 @@ class URLExtractionAgent:
             return job_links
             
         except Exception as e:
-            print(f"Error extracting job links: {str(e)}")
+            logger.error(f"Error extracting job links: {str(e)}")
             return None

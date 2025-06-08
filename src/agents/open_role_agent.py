@@ -13,7 +13,8 @@ import os
 from playwright.async_api import Page
 from playwright.sync_api import sync_playwright, Playwright
 from browserbase import Browserbase
-from src.utils.utils import sanitize_url_for_filename
+from src.utils.utils import get_markdown_content, sanitize_url_for_filename
+from loguru import logger
 
 # Load environment variables
 load_dotenv(override=True)
@@ -62,7 +63,7 @@ async def dismiss_popup(params: DismissPopupParams, page: Page) -> ActionResult:
 MESSAGE_CONTEXT = """
 You are a helpful assistant that will help scrape job listings. All you have to do
 is navigate to the bottom of each page to load all jobs into the current DOM. If a cookie banner or popup appears, dismiss it.
-If you see a "Load more" button, click it a few times.
+If you see a "Load more" button at the bottom of the page, click it a few times.
 Do not navigate away from the site, or click any other links, including pagination.
 """
 
@@ -79,6 +80,7 @@ async def on_step_end(agent: Agent):
         agent.html = html
 
 async def find_open_roles(url: str):
+    clean_url = sanitize_url_for_filename(url)
     initial_actions = [
         {'open_tab': {'url': url}},
     ]
@@ -97,11 +99,11 @@ async def find_open_roles(url: str):
             initial_actions=initial_actions,
             controller=controller,
             use_vision=True,
-            save_conversation_path="recordings/"
+            save_conversation_path=f"logs/{clean_url}/"
         )
         
         history = await agent.run(
-            max_steps=5,
+            max_steps=8,
             on_step_end=on_step_end
         )
         
@@ -110,27 +112,16 @@ async def find_open_roles(url: str):
         
         # Strip img and script tags from HTML before processing
         if html:
-            html = re.sub(r'<(script|img|head|style|footer)[^>]*>.*?</\1>|<(script|img|head|style|footer)[^>]*?/>', '', html, flags=re.DOTALL)
-            
-            # Convert HTML to Markdown - include common job listing tags
-            markdown_content = md(html, convert=['a', 'button', 'div', 'span', 'li', 'h1', 'h2', 'h3', 'h4', 'p', 'tr'])
-            
-            # Upload files to cloud storage
-            sanitized_url = sanitize_url_for_filename(url)
-            filename = f"url_extraction/{sanitized_url}.html"
-            markdown_filename = f"url_extraction/{sanitized_url}.md"
-            
-            await upload_file_to_bucket(filename, html, "text/html")
-            await upload_file_to_bucket(markdown_filename, markdown_content, "text/markdown")
+            html, markdown_content = await get_markdown_content(html, url)
         
         tokens = history.total_input_tokens()
-        print(f'Tokens: {tokens}')
+        logger.info(f'Tokens: {tokens}')
         
         # Return both the result and the final HTML
         return html, markdown_content
             
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        logger.error(f"An error occurred: {str(e)}")
         return None, None
     finally:
         if browser:

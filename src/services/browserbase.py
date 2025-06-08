@@ -7,7 +7,7 @@ from browser_use import Agent, Browser, BrowserConfig
 from browser_use.browser.context import BrowserContext, BrowserContextConfig, BrowserSession
 from langchain_anthropic import ChatAnthropic
 from playwright.async_api import Page, BrowserContext as PlaywrightContext
-
+from loguru import logger
 load_dotenv(override=True)
 BB_API_KEY = os.getenv("BB_API_KEY")
 BB_PROJECT_ID = os.getenv("BB_PROJECT_ID")
@@ -59,6 +59,7 @@ async def setup_browser() -> tuple[Browser, UseBrowserbaseContext]:
     bb_session = bb.sessions.create(
         project_id=BB_PROJECT_ID,
     )
+    logger.info(f"View replay at https://browserbase.com/sessions/{bb_session.id}")
     
     # # Basic configuration
 # browser = Browser(

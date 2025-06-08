@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 from pydantic import BaseModel, Field
+from loguru import logger
 
 load_dotenv(override=True)
 
@@ -65,5 +66,5 @@ class JobDataAgent:
             return job_data
             
         except Exception as e:
-            print(f"Error extracting job data: {str(e)}")
+            logger.error(f"Error extracting job data: {str(e)}")
             return None

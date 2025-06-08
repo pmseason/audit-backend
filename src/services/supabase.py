@@ -196,17 +196,17 @@ async def update_open_role_task_status(task_ids: List[str], status: AuditStatus,
     except APIError as e:
         raise Exception(f"Error updating task status: {str(e)}")
 
-async def insert_scraped_jobs(jobs: List[dict], task_id: int):
+async def insert_scraped_jobs(jobs: List[dict], task_id: int = None):
     """Insert scraped jobs for a specific task."""
     try:
-        jobs_with_task = [{**job, "task": task_id} for job in jobs]
+        jobs_with_task = [{**job, "task": task_id} for job in jobs] if task_id else jobs
         
         response = supabase.table("scraped_jobs") \
             .insert(jobs_with_task) \
             .execute()
         return response.data
     except APIError as e:
-        raise Exception(f"Error inserting scraped jobs: {str(e)}")
+        logger.error(f"Error inserting scraped jobs: {str(e)}")
 
 async def delete_open_role_audit_task(task_id: int):
     """Delete an open role audit task by its ID."""
