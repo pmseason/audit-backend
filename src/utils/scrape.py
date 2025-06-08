@@ -29,6 +29,7 @@ async def get_job_postings(url: str, taskId: str = None):
         scraped_jobs = []
         
         for job_posting in job_postings:
+            logger.info(f"Extracting job data for {job_posting}")
             html, markdown_content = await extract_page_content(job_posting)
             if not html or not markdown_content:
                 logger.error(f"No response received for {job_posting}")
@@ -45,6 +46,7 @@ async def get_job_postings(url: str, taskId: str = None):
                 "other": response.other
             } if response else None
             if job:
+                logger.info(f"Successfully extracted data for {job_posting}")
                 scraped_jobs.append(job)
                 await insert_scraped_jobs([job], taskId)
             
