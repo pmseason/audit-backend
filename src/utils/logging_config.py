@@ -70,13 +70,16 @@ async def upload_logs_to_cloud(run_id: str):
         logger.warning(f"No logs found for run {run_id}")
         return
     
-    for log_file in run_log_dir.glob("*.{log,txt}"):
+    log_files = list(run_log_dir.glob("*.log")) + list(run_log_dir.glob("*.txt"))
+    for log_file in log_files:
         try:
             with open(log_file, 'r') as f:
                 content = f.read()
             
+            date_str = datetime.now().strftime("%Y%m%d")
+            
             # Upload to cloud storage
-            cloud_path = f"logs/{run_id}/{log_file.name}"
+            cloud_path = f"logs/{date_str}/{run_id}/{log_file.name}"
             await upload_file_to_bucket(
                 file_path=cloud_path,
                 content=content,

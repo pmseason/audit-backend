@@ -25,6 +25,5 @@ async def start_scrape_roles():
             logger.info(f"Jobs found: {jobs_found}")
         except Exception as e:
             logger.error(f"Error scraping {company['name']}: {str(e)}")
-            raise
         finally:
             await upload_logs_to_cloud(clean_url)

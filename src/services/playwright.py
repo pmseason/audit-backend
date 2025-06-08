@@ -32,7 +32,7 @@ async def extract_page_content(url: str):
             
             # Get the HTML content
             html = await page.content()
-            return await get_markdown_content(html, url)
+            return await get_markdown_content(html, url, "job_extraction")
             
         except Exception as e:
             logger.error(f"Error extracting page content: {str(e)}")

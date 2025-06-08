@@ -19,7 +19,7 @@ def sanitize_url_for_filename(url: str) -> str:
     return sanitized
 
 
-async def get_markdown_content(html: str, url: str):
+async def get_markdown_content(html: str, url: str, pathname: str = None):
     """
     Get the markdown content from a HTML string.
     """
@@ -31,8 +31,8 @@ async def get_markdown_content(html: str, url: str):
     
     # Upload files to cloud storage
     sanitized_url = sanitize_url_for_filename(url)
-    filename = f"job_extraction/{sanitized_url}.html"
-    markdown_filename = f"job_extraction/{sanitized_url}.md"
+    filename = f"{pathname}/{sanitized_url}.html"
+    markdown_filename = f"{pathname}/{sanitized_url}.md"
     
     await upload_file_to_bucket(filename, html, "text/html")
     await upload_file_to_bucket(markdown_filename, markdown_content, "text/markdown")

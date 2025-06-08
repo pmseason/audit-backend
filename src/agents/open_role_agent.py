@@ -112,7 +112,7 @@ async def find_open_roles(url: str):
         
         # Strip img and script tags from HTML before processing
         if html:
-            html, markdown_content = await get_markdown_content(html, url)
+            html, markdown_content = await get_markdown_content(html, url, "url_extraction")
         
         tokens = history.total_input_tokens()
         logger.info(f'Tokens: {tokens}')
