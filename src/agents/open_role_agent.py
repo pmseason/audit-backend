@@ -31,13 +31,6 @@ class DismissPopupParams(BaseModel):
         description="CSS selector for the dismiss/close button in popups"
     )
 
-class ScrapedJob(BaseModel):
-    title: str
-    url: str
-
-class OpenRoleAuditTask(BaseModel):
-    scraped_jobs: list[ScrapedJob]
-    error_message: str
 
 # controller = Controller(output_model=OpenRoleAuditTask, exclude_actions=["go_to_url"])
 controller = Controller(exclude_actions=["go_to_url"])

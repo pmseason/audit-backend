@@ -68,7 +68,7 @@ async def handle_open_role_audit_task(task_request: TaskRequest):
         jobs_found = await get_job_postings(url, task_request.taskId)
         logger.info(f"Number of jobs found: {len(jobs_found)}")
         logger.info(f"Jobs found: {jobs_found}")
-        await upload_logs_to_cloud(clean_url)
+        
         
         if not jobs_found:
             raise Exception("No result from get_job_postings")
@@ -86,3 +86,5 @@ async def handle_open_role_audit_task(task_request: TaskRequest):
         error_message = str(error)
         logger.error(f"Error processing open role audit task {task_request.taskId}: {error_message}")
         await update_open_role_task_status([task_request.taskId], AuditStatus.FAILED, error_message)
+    finally:
+        await upload_logs_to_cloud(clean_url)

@@ -37,16 +37,10 @@ async def get_job_postings(url: str, taskId: str = None):
             
             job_data_agent = JobDataAgent()
             response = job_data_agent.extract_job_data(markdown_content, job_posting)
-            job =  {
-                "title": response.title,
-                "location": response.location,
-                "url": job_posting,
-                "description": response.description,
-                "company": response.company,
-                "other": response.other
-            } if response else None
+            job = response.model_dump() if response else None
             if job:
                 logger.info(f"Successfully extracted data for {job_posting}")
+                logger.info(f"Job: {job}")
                 scraped_jobs.append(job)
                 await insert_scraped_jobs([job], taskId)
             
