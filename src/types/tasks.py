@@ -6,7 +6,8 @@ class TaskRequest(BaseModel):
     url: str
     jobId: str | None = None
     extra_notes: str | None = None
-
+    site: str | None = None
+    
     @property
     def is_closed_role_task(self) -> bool:
         return self.type == "CLOSED_ROLE_AUDIT"

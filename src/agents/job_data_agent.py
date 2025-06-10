@@ -34,8 +34,11 @@ class JobDataAgent:
         Source URL: {source_url}
         
         Rules:
-        1. Extract all relevant job information including title, company, location, and description
-        2. If certain information is not available, use appropriate default values
+        1. Extract all relevant job information including title, company, location, salary, visa sponsored, job type, and description
+        2. If certain information is not available, leave it blank
+        3. If the job is not a product-related or consulting-related job, set the site to "other"
+        4. If the job is a product-related job, set the site to "apm"
+        5. If the job is a consulting-related job, set the site to "consulting"
         
         Markdown Content:
         {markdown_content}

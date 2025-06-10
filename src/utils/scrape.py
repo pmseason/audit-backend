@@ -13,7 +13,7 @@ from loguru import logger
         
         
         
-async def get_job_postings(url: str, taskId: str = None):
+async def get_job_postings(url: str, taskId: str = None, site: str = None):
     try:
         html, markdown_content = await find_open_roles(url)
         

@@ -115,7 +115,8 @@ async def start_open_role_audit(task_ids: List[str]):
                 "type": "OPEN_ROLE_AUDIT",
                 "taskId": task["id"],
                 "url": task["url"],
-                "extra_notes": task["extra_notes"]
+                "extra_notes": task["extra_notes"],
+                "site": task["site"]
             })
             for task in tasks
         ]

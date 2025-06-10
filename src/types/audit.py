@@ -13,6 +13,13 @@ class AuditStatus(str, Enum):
     IN_PROGRESS = "in_progress"
 
 
+class SiteType(str, Enum):
+    """Type of job posting site."""
+    APM = "apm"
+    CONSULTING = "consulting"
+    OTHER = "other"
+
+
 @dataclass
 class ClosedRoleAuditTask:
     id: str
@@ -54,6 +61,9 @@ class ScrapedJobAgent(BaseModel):
     salary: str = Field(description="Salary of the job")
     visa_sponsored: VisaSponsor = Field(description="Whether the job is visa sponsored")
     status: JobStatus = Field(description="Status of the job")
+    site: SiteType = Field(
+        description="Type of job posting site. Must be one of: 'apm' for Product-related jobs, 'consulting' for Consulting-related jobs, or 'other' for other types of jobs"
+    )
 
 @dataclass
 class OpenRoleAuditTask:
@@ -65,6 +75,7 @@ class OpenRoleAuditTask:
     scraped_jobs: List[ScrapedJob]
     updated_at: str
     created_at: str
+    site: str
 
 
 

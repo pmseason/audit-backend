@@ -65,7 +65,7 @@ async def handle_open_role_audit_task(task_request: TaskRequest):
         url = task_request.url
         clean_url = sanitize_url_for_filename(url)
         setup_logging(clean_url)
-        jobs_found = await get_job_postings(url, task_request.taskId)
+        jobs_found = await get_job_postings(url, task_request.taskId, task_request.site)
         logger.info(f"Number of jobs found: {len(jobs_found)}")
         logger.info(f"Jobs found: {jobs_found}")
         
