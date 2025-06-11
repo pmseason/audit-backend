@@ -21,7 +21,6 @@ class StartClosedRoleAuditRequest(BaseModel):
 
 class AddOpenRoleAuditRequest(BaseModel):
     url: str
-    extra_notes: Optional[str] = None
 
 class StartOpenRoleAuditRequest(BaseModel):
     taskIds: List[int]
@@ -82,7 +81,7 @@ async def get_open_role_audit_tasks_route():
     }
 )
 async def add_open_role_audit_task_route(request: AddOpenRoleAuditRequest):
-    return await add_open_role_audit_task(request.url, request.extra_notes)
+    return await add_open_role_audit_task(request.url)
 
 @router.post("/start/open",
     summary="Start open role audit",

@@ -101,20 +101,7 @@ async def update_closed_role_task_status(task_ids: List[str], status: AuditStatu
     except APIError as e:
         raise Exception(f"Error updating task status: {str(e)}")
 
-# async def insert_audit_results(task_id: str, result: str, justification: str, screenshot: str):
-#     """Insert audit results for a specific task."""
-#     try:
-#         response = supabase.table("closed_role_audit_tasks") \
-#             .update({
-#                 "result": result,
-#                 "justification": justification,
-#                 "screenshot": screenshot
-#             }) \
-#             .eq("id", task_id) \
-#             .execute()
-#         return response.data
-#     except APIError as e:
-#         raise Exception(f"Error updating audit results: {str(e)}")
+###### OPEN ROLE AUDIT ##########################
 
 async def get_all_open_role_audit_tasks():
     """Fetch all open role audit tasks."""
@@ -128,13 +115,12 @@ async def get_all_open_role_audit_tasks():
     except APIError as e:
         raise Exception(f"Error fetching all open role audit tasks: {str(e)}")
 
-async def insert_open_role_audit_task(url: str, extra_notes: str = None):
+async def insert_open_role_audit_task(url: str):
     """Insert a new open role audit task."""
     task = {
         "url": url,
         "status": AuditStatus.NOT_RUN,
-        "status_message": "Task has not run",
-        "extra_notes": extra_notes
+        "status_message": "Task has not run"
     }
     
     try:
@@ -170,7 +156,8 @@ async def update_open_role_task_status(task_ids: List[str], status: AuditStatus,
     try:
         update_data = {
             "status": status,
-            "status_message": status_message
+            "status_message": status_message,
+            "updated_at": datetime.now().isoformat().replace('Z', '+00:00')
         }
         
         if extra_data:
@@ -185,10 +172,10 @@ async def update_open_role_task_status(task_ids: List[str], status: AuditStatus,
     except APIError as e:
         raise Exception(f"Error updating task status: {str(e)}")
 
+###### SCRAPED JOBS ##########################
 async def insert_scraped_jobs(jobs: List[dict]):
     """Insert scraped jobs for a specific task."""
     try:
-        
         response = supabase.table("positions") \
             .insert(jobs) \
             .execute()
@@ -211,6 +198,7 @@ async def filter_jobs_to_scrape(urls: List[str]):
     except APIError as e:
         raise Exception(f"Error filtering jobs to scrape: {str(e)}")
     
+###### SCRAPE BROADCAST ##########################
 
 async def get_last_scrape_broadcast():
     """Get the last scrape broadcast date."""

@@ -5,7 +5,7 @@ from markdownify import markdownify as md
 from src.agents.job_data_agent import JobDataAgent
 from src.services.supabase import insert_scraped_jobs, filter_jobs_to_scrape
 from loguru import logger
-
+from fastapi import HTTPException
 
         
         
@@ -16,7 +16,7 @@ async def get_job_postings(url: str, taskId: str, company_id: str):
         
         if not html or not markdown_content:
             logger.error(f"No response received for {url}")
-            return
+            raise HTTPException(status_code=404, detail="No response received for url")
         
         url_extraction_agent = URLExtractionAgent()
         response = url_extraction_agent.extract_job_links(markdown_content, url)
@@ -37,13 +37,14 @@ async def get_job_postings(url: str, taskId: str, company_id: str):
             job["scraping_task"] = taskId
             job["hidden"] = True
         
-        await insert_scraped_jobs(jobs)
+        if jobs and len(jobs) > 0:
+            await insert_scraped_jobs(jobs)
             
         return jobs
         
     except Exception as e:
         logger.error(f"Error processing {url}: {str(e)}")
-        return []
+        raise HTTPException(status_code=500, detail=str(e))
     
     
     

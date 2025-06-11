@@ -57,7 +57,7 @@ class JobDataAgent:
                     
             except Exception as e:
                 logger.error(f"Error in browser session: {str(e)}")
-                return []
+                raise
                     
             finally:
                 await page.close() if page else None
@@ -145,4 +145,4 @@ class JobDataAgent:
             
         except Exception as e:
             logger.error(f"Error extracting job data: {str(e)}")
-            return None
+            raise

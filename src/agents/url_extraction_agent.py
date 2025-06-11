@@ -69,4 +69,4 @@ class URLExtractionAgent:
             
         except Exception as e:
             logger.error(f"Error extracting job links: {str(e)}")
-            return None
+            raise

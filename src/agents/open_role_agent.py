@@ -115,7 +115,7 @@ async def find_open_roles(url: str):
             
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
-        return None, None
+        raise
     finally:
         if browser:
             await browser.close()

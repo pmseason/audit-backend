@@ -85,12 +85,12 @@ async def get_open_role_audit_tasks():
         print(f"Error fetching open role audit tasks: {error}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
-async def add_open_role_audit_task(url: str, extra_notes: Optional[str] = None):
+async def add_open_role_audit_task(url: str):
     try:
         if not url:
             raise HTTPException(status_code=400, detail="URL is required")
             
-        task = await insert_open_role_audit_task(url, extra_notes)
+        task = await insert_open_role_audit_task(url)
         return task
     except HTTPException:
         raise
@@ -115,7 +115,6 @@ async def start_open_role_audit(task_ids: List[str]):
                 "type": "OPEN_ROLE_AUDIT",
                 "taskId": task["id"],
                 "url": task["url"],
-                "extra_notes": task["extra_notes"],
                 "site": task["site"]
             })
             for task in tasks

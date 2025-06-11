@@ -9,7 +9,7 @@ from src.services.cloud_storage import upload_file_to_bucket
 LOGS_DIR = Path("logs")
 LOGS_DIR.mkdir(exist_ok=True)
 
-def setup_logging(run_id: str = None):
+def setup_logging(run_id: str):
     """
     Configure logging with both console and file output.
     
@@ -26,10 +26,6 @@ def setup_logging(run_id: str = None):
         format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
         level="INFO"
     )
-    
-    # Generate run identifier
-    if not run_id:
-        run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     # Create run-specific log directory
     run_log_dir = LOGS_DIR / run_id
