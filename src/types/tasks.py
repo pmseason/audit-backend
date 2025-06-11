@@ -3,7 +3,7 @@ from pydantic import BaseModel
 class TaskRequest(BaseModel):
     taskId: int
     type: str
-    url: str
+    url: str | None = None
     jobId: str | None = None
     extra_notes: str | None = None
     site: str | None = None

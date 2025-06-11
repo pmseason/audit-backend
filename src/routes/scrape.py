@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body
 from typing import List, Optional
 from pydantic import BaseModel
-from src.controllers.scrape import start_scrape_roles
+from src.controllers.scrape import start_scrape_roles, post_scrape_results_controller
 
 router = APIRouter(
     prefix="/scrape",
@@ -27,3 +27,14 @@ class StartScrapeRequest(BaseModel):
 )
 async def scrape_open_jobs():
     return await start_scrape_roles()
+
+@router.post("/results",
+    summary="Get scrape results",
+    description="Returns the current status of scrape tasks",
+    responses={
+        200: {"description": "Successfully retrieved scrape status"},
+        500: {"description": "Internal server error"}
+    }
+)
+async def post_scrape_results():
+    return await post_scrape_results_controller()

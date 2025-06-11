@@ -63,6 +63,8 @@ class URLExtractionAgent:
             
             job_links.job_postings = [urljoin(source_url, url) for url in job_links.job_postings]
             
+            logger.info(f"Used {response.usage.total_tokens} tokens to extract job links")
+            
             return job_links
             
         except Exception as e:

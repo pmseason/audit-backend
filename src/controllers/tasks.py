@@ -1,6 +1,6 @@
 from loguru import logger
 from src.types.tasks import TaskRequest
-from src.services.supabase import update_closed_role_task_status, update_open_role_task_status, insert_scraped_jobs, delete_scraped_jobs_by_task_id
+from src.services.supabase import update_closed_role_task_status, update_open_role_task_status, insert_scraped_jobs, get_open_role_audit_tasks_by_ids
 from src.types.audit import AuditStatus
 from src.agents.closed_role_agent import check_closed_role
 from src.agents.open_role_agent import find_open_roles
@@ -61,20 +61,21 @@ async def handle_open_role_audit_task(task_request: TaskRequest):
     try:
         logger.info(f"Starting open role audit task processing for taskId: {task_request.taskId}")
         await update_open_role_task_status([task_request.taskId], AuditStatus.IN_PROGRESS, "Task is running")
+        task = await get_open_role_audit_tasks_by_ids([task_request.taskId])
+        if not task:
+            raise Exception("Task not found")
+        task = task[0]
         
-        url = task_request.url
+        url = task["url"]
         clean_url = sanitize_url_for_filename(url)
         setup_logging(clean_url)
-        jobs_found = await get_job_postings(url, task_request.taskId, task_request.site)
+        jobs_found = await get_job_postings(url, task["id"], task["company"])
         logger.info(f"Number of jobs found: {len(jobs_found)}")
         logger.info(f"Jobs found: {jobs_found}")
         
         
         if not jobs_found:
             raise Exception("No result from get_job_postings")
-            
-            # jobs are inserted in the get_job_postings function
-        # await insert_scraped_jobs(jobs_found, task_request.taskId)
         
         # Log task completion
         await update_open_role_task_status([task_request.taskId], AuditStatus.COMPLETED, "Task is complete")

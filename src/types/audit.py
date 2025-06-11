@@ -49,17 +49,13 @@ class ScrapedJob:
     
 class ScrapedJobAgent(BaseModel):
     """Model representing a scraped job posting with its details."""
-    id: int = Field(description="Unique identifier for the scraped job")
     title: str = Field(description="Title of the job position")
-    company: str = Field(description="Name of the company offering the position")
     location: str = Field(description="Geographic location of the job")
     description: str = Field(description="Detailed description of the job requirements and responsibilities")
-    task: int = Field(description="ID of the associated task")
-    url: str = Field(description="URL of the job posting")
     other: str = Field(description="Additional information or notes about the job posting")
-    job_type: RoleType = Field(description="Type of job (internship or full-time)")
-    salary: str = Field(description="Salary of the job")
-    visa_sponsored: VisaSponsor = Field(description="Whether the job is visa sponsored")
+    jobType: RoleType = Field(description="Type of job (internship or full-time)")
+    salaryText: str = Field(description="Salary of the job, e.g. $100 - $130k")
+    visaSponsored: VisaSponsor = Field(description="Whether the job is visa sponsored")
     status: JobStatus = Field(description="Status of the job")
     site: SiteType = Field(
         description="Type of job posting site. Must be one of: 'apm' for Product-related jobs, 'consulting' for Consulting-related jobs, or 'other' for other types of jobs"
@@ -69,13 +65,14 @@ class ScrapedJobAgent(BaseModel):
 class OpenRoleAuditTask:
     id: int
     url: str
-    extra_notes: str
     status: AuditStatus
     status_message: str
-    scraped_jobs: List[ScrapedJob]
     updated_at: str
     created_at: str
     site: str
+    company: str
+    job_title: str
+    role_type: str
 
 
 

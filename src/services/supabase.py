@@ -5,6 +5,7 @@ from enum import Enum
 from loguru import logger
 from postgrest.exceptions import APIError
 from src.types.audit import AuditStatus
+from datetime import datetime
 
 # Initialize Supabase client
 supabase_url = os.getenv("SUPABASE_URL")
@@ -118,23 +119,11 @@ async def update_closed_role_task_status(task_ids: List[str], status: AuditStatu
 async def get_all_open_role_audit_tasks():
     """Fetch all open role audit tasks."""
     try:
-        response_1 = supabase.table("open_role_audit_tasks") \
+        response = supabase.table("open_role_audit_tasks") \
             .select("*") \
             .execute()
             
-        tasks = response_1.data
-        
-        response_2 = supabase.table("scraped_jobs") \
-            .select("*") \
-            .in_("task", [task["id"] for task in tasks]) \
-            .execute()
-            
-        scraped_jobs = response_2.data
-        
-        for task in tasks:
-            task["scraped_jobs"] = [scraped_job for scraped_job in scraped_jobs if scraped_job["task"] == task["id"]]
-            
-        return tasks
+        return response.data
         
     except APIError as e:
         raise Exception(f"Error fetching all open role audit tasks: {str(e)}")
@@ -196,17 +185,100 @@ async def update_open_role_task_status(task_ids: List[str], status: AuditStatus,
     except APIError as e:
         raise Exception(f"Error updating task status: {str(e)}")
 
-async def insert_scraped_jobs(jobs: List[dict], task_id: int = None):
+async def insert_scraped_jobs(jobs: List[dict]):
     """Insert scraped jobs for a specific task."""
     try:
-        jobs_with_task = [{**job, "task": task_id} for job in jobs] if task_id else jobs
         
-        response = supabase.table("scraped_jobs") \
-            .insert(jobs_with_task) \
+        response = supabase.table("positions") \
+            .insert(jobs) \
             .execute()
         return response.data
     except APIError as e:
         logger.error(f"Error inserting scraped jobs: {str(e)}")
+
+async def filter_jobs_to_scrape(urls: List[str]):
+    """Filter jobs to scrape by urls that do not exist in the db"""
+    try:
+        
+        response = supabase.table("positions") \
+            .select("*") \
+            .in_("url", urls) \
+            .execute()
+        
+        already_scraped_urls = [job["url"] for job in response.data]
+        
+        return [url for url in urls if url not in already_scraped_urls]
+    except APIError as e:
+        raise Exception(f"Error filtering jobs to scrape: {str(e)}")
+    
+
+async def get_last_scrape_broadcast():
+    """Get the last scrape broadcast date."""
+    try:
+        response = supabase.table("config") \
+            .select("lastUpdatedTime") \
+            .eq("id", "scraping_automation") \
+            .limit(1) \
+            .execute()
+        return response.data[0]["lastUpdatedTime"]
+    except APIError as e:
+        raise Exception(f"Error getting last scrape broadcast: {str(e)}")
+    
+
+def get_date_added_text(date_added: str) -> str:
+    """Transform date added into a human readable format."""
+    now = datetime.now()
+    time = now.timestamp() - datetime.fromisoformat(date_added.replace('Z', '+00:00')).timestamp()
+    difference_in_days = int(time / (60 * 60 * 24))
+
+    if difference_in_days == 0:
+        return "Added Today"
+    elif difference_in_days == 1:
+        return "Added 1 Day Ago"
+    elif 1 < difference_in_days <= 30:
+        return f"Added {difference_in_days} Days Ago"
+    else:
+        return "Added 30+ Days Ago"
+
+def get_visa_text(visa: str) -> str:
+    """Transform visa status into a formatted string."""
+    if visa == "yes":
+        return "Visa Sponsored &#9745;"
+    elif visa == "no":
+        return "Visa Sponsored &#9746;"
+    else:
+        return "Visa Sponsored ?"
+
+async def get_new_jobs_to_send_out(site: str):
+    """Get the new jobs to send out with transformed data structure."""
+    try:
+        response = supabase.table("positions") \
+            .select("*, company(*, logo(*))") \
+            .eq("status", "open") \
+            .eq("site", site) \
+            .not_.is_("scraping_task", None) \
+            .execute()
+            
+        transformed_positions = []
+        for position in response.data:
+            company = position.get('company', {})
+            logo = company.get('logo', {})
+            
+            transformed_position = {
+                'companyName': company.get('name'),
+                'logoUrl': f"https://images.careerseason.com/{logo.get('id')}" if logo.get('id') else None,
+                'title': position.get('title'),
+                'url': position.get('url'),
+                'salaryText': position.get('salaryText'),
+                'visaText': get_visa_text(position.get('visaSponsored', '')),
+                'dateAddedText': get_date_added_text(position.get('dateAdded', datetime.now().isoformat())),
+                'jobType': position.get('jobType')
+            }
+            transformed_positions.append(transformed_position)
+            
+        return transformed_positions
+    except APIError as e:
+        raise Exception(f"Error getting new jobs to send out: {str(e)}")
 
 async def delete_open_role_audit_task(task_id: int):
     """Delete an open role audit task by its ID."""
@@ -218,37 +290,3 @@ async def delete_open_role_audit_task(task_id: int):
         return response.data
     except APIError as e:
         raise Exception(f"Error deleting open role audit task: {str(e)}")
-
-async def delete_scraped_jobs_by_task_id(task_id: int):
-    """Delete all scraped jobs associated with a specific task ID.
-    
-    Args:
-        task_id: The ID of the task whose scraped jobs should be deleted
-        
-    Returns:
-        The deleted records
-    """
-    try:
-        response = supabase.table("scraped_jobs") \
-            .delete() \
-            .eq("task", task_id) \
-            .execute()
-        return response.data
-    except APIError as e:
-        raise Exception(f"Error deleting scraped jobs: {str(e)}")
-    
-    
-async def get_companies_with_career_page_urls():
-    """Get all companies that have career page URLs defined.
-    
-    Returns:
-        List of company records with non-null career_page_link fields
-    """
-    try:
-        response = supabase.table("companies") \
-            .select("*") \
-            .neq("career_page_link", None) \
-            .execute()
-        return response.data
-    except APIError as e:
-        raise Exception(f"Error fetching companies: {str(e)}")
