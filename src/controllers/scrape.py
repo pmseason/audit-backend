@@ -2,7 +2,7 @@ from src.utils.scrape import get_job_postings
 from loguru import logger
 from src.utils.logging_config import setup_logging, upload_logs_to_cloud
 from src.utils.utils import sanitize_url_for_filename
-from src.services.supabase import get_all_open_role_audit_tasks, get_last_scrape_broadcast, get_new_jobs_to_send_out
+from src.services.supabase import get_all_open_role_audit_tasks, get_last_scrape_broadcast, get_new_jobs_to_send_out, update_config_last_updated_time
 
 from src.controllers.audit import start_open_role_audit
 from src.services.cloud_tasks import create_task
@@ -47,7 +47,7 @@ async def post_scrape_results_controller():
         tasks = await get_all_open_role_audit_tasks()
         
         all_tasks_ran = all(
-            datetime.fromisoformat(task["updated_at"].replace('Z', '+00:00')).date() >= datetime.now().date()
+            datetime.fromisoformat(task["updated_at"].replace('Z', '+00:00')).date() >= datetime.now().date() and task["status"] in ["completed", "failed"]
             for task in tasks
         )
         
@@ -60,29 +60,44 @@ async def post_scrape_results_controller():
             
             apm = {
                 "internshipData": [job for job in new_apm_jobs if job["jobType"] == "internship"],
-                "fullTimeData": [job for job in new_apm_jobs if job["jobType"] == "full-time"]
+                "fullTimeData": [job for job in new_apm_jobs if job["jobType"] == "full-time"],
+                "site": "apm"
             }
             
             consulting = {
                 "internshipData": [job for job in new_consulting_jobs if job["jobType"] == "internship"],
-                "fullTimeData": [job for job in new_consulting_jobs if job["jobType"] == "full-time"]
+                "fullTimeData": [job for job in new_consulting_jobs if job["jobType"] == "full-time"],
+                "site": "consulting"
             }
             
-            payload = {
-                "apm": apm,
-                "consulting": consulting
-            }
-            # Send email with new job postings via Directus flow
-            response = requests.post(
-                "https://directus.apmseason.com/flows/trigger/28537cec-ec71-43b0-b78c-295c9181b2c5",
-                json=payload
-            )
+            if len(apm["internshipData"]) > 0 or len(apm["fullTimeData"]) > 0:
+                # # Send email with new job postings via Directus flow
+                response = requests.post(
+                    "https://directus.apmseason.com/flows/trigger/28537cec-ec71-43b0-b78c-295c9181b2c5",
+                    json=apm
+                )
             if response.status_code != 200:
                 logger.error(f"Error sending email: {response.text}")
                 raise Exception("Failed to send email with new job postings")
             
+            if len(consulting["internshipData"]) > 0 or len(consulting["fullTimeData"]) > 0:
+                response = requests.post(
+                    "https://directus.apmseason.com/flows/trigger/28537cec-ec71-43b0-b78c-295c9181b2c5",
+                    json=consulting
+                )
+            
+            if response.status_code != 200:
+                logger.error(f"Error sending email: {response.text}")
+                raise Exception("Failed to send email with new job postings")
+            
+            await update_config_last_updated_time()
+            
             return {
-                "message": "Email sent successfully"
+                "message": "Email sent successfully",
+                "payload": {
+                    "apm": apm,
+                    "consulting": consulting
+                }
             }
         
         return {

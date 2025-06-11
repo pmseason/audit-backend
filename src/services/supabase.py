@@ -171,6 +171,18 @@ async def update_open_role_task_status(task_ids: List[str], status: AuditStatus,
         return response.data
     except APIError as e:
         raise Exception(f"Error updating task status: {str(e)}")
+    
+
+async def delete_open_role_audit_task(task_id: int):
+    """Delete an open role audit task by its ID."""
+    try:
+        response = supabase.table("open_role_audit_tasks") \
+            .delete() \
+            .eq("id", task_id) \
+            .execute()
+        return response.data
+    except APIError as e:
+        raise Exception(f"Error deleting open role audit task: {str(e)}")
 
 ###### SCRAPED JOBS ##########################
 async def insert_scraped_jobs(jobs: List[dict]):
@@ -244,7 +256,7 @@ async def get_new_jobs_to_send_out(site: str):
             .select("*, company(*, logo(*))") \
             .eq("status", "open") \
             .eq("site", site) \
-            .not_.is_("scraping_task", None) \
+            .not_.is_("title", None) \
             .execute()
             
         transformed_positions = []
@@ -254,27 +266,31 @@ async def get_new_jobs_to_send_out(site: str):
             
             transformed_position = {
                 'companyName': company.get('name'),
-                'logoUrl': f"https://images.careerseason.com/{logo.get('id')}" if logo.get('id') else None,
+                'logoUrl': f"https://images.careerseason.com/{logo.get('filename_disk')}" if logo.get('filename_disk') else None,
                 'title': position.get('title'),
                 'url': position.get('url'),
-                'salaryText': position.get('salaryText'),
-                'visaText': get_visa_text(position.get('visaSponsored', '')),
                 'dateAddedText': get_date_added_text(position.get('dateAdded', datetime.now().isoformat())),
-                'jobType': position.get('jobType')
             }
+            if position.get('salaryText'):
+                transformed_position['salaryText'] = position.get('salaryText')
+            if position.get('jobType'):
+                transformed_position['jobType'] = position.get('jobType')
+            if position.get('visaSponsored'):
+                transformed_position['visaText'] = get_visa_text(position.get('visaSponsored'))
+            
             transformed_positions.append(transformed_position)
             
         return transformed_positions
     except APIError as e:
         raise Exception(f"Error getting new jobs to send out: {str(e)}")
 
-async def delete_open_role_audit_task(task_id: int):
-    """Delete an open role audit task by its ID."""
+async def update_config_last_updated_time():
+    """Update the last updated time for the config table."""
     try:
-        response = supabase.table("open_role_audit_tasks") \
-            .delete() \
-            .eq("id", task_id) \
+        response = supabase.table("config") \
+            .update({"lastUpdatedTime": datetime.now().isoformat().replace('Z', '+00:00')}) \
+            .eq("id", "scraping_automation") \
             .execute()
         return response.data
     except APIError as e:
-        raise Exception(f"Error deleting open role audit task: {str(e)}")
+        raise Exception(f"Error updating config last updated time: {str(e)}")
