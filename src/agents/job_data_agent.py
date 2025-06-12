@@ -115,11 +115,23 @@ class JobDataAgent:
         Source URL: {source_url}
         
         Rules:
-        1. Extract all relevant job information including title, company, location, salary, visa sponsored, job type, and description
-        2. If certain information is not available, leave it blank
-        3. If the job is not a product-related or consulting-related job, set the site to "other"
-        4. If the job is a product-related job, set the site to "apm"
-        5. If the job is a consulting-related job, set the site to "consulting"
+        1. Extract all relevant job information including:
+           - title: The job position title
+           - location: Geographic location of the job
+           - description: Detailed job requirements and responsibilities
+           - other: Any additional information or notes
+           - jobType: Must be either "internship" or "full-time"
+           - salaryText: Salary information in format like "$100 - $130k"
+           - visaSponsored: Must be either "yes", "no", or "unknown"
+           - status: Current status of the job posting
+        2. For job categorization, determine and set the appropriate boolean flags:
+           - is_product_job: True for product-focused roles (e.g., Product Manager, APM)
+           - is_consulting_job: True for consulting roles (e.g., Consultant, Associate Consultant)
+           - is_engineering_job: True for engineering roles (e.g., Software Engineer, Data Scientist, Architect)
+           - is_other_job: True if none of the above categories apply
+        3. Extract years_experience from the job description, using formats like "0-1" or "1-3"
+        4. If certain information is not available, leave the field blank or use appropriate default values
+        5. Ensure all extracted data matches the expected format and types defined in the ScrapedJobAgent model
         
         Markdown Content:
         {markdown_content}

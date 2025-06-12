@@ -57,9 +57,11 @@ class ScrapedJobAgent(BaseModel):
     salaryText: str = Field(description="Salary of the job, e.g. $100 - $130k")
     visaSponsored: VisaSponsor = Field(description="Whether the job is visa sponsored")
     status: JobStatus = Field(description="Status of the job")
-    site: SiteType = Field(
-        description="Type of job posting site. Must be one of: 'apm' for Product-related jobs, 'consulting' for Consulting-related jobs, or 'other' for other types of jobs"
-    )
+    is_product_job: bool = Field(description="Whether the job is a product-focused role like 'Product Manager' or 'Associate Product Manager'. This excludes engineering roles and will mostly be true for positions that have 'Product' in the title or are directly related to product management.")
+    is_consulting_job: bool = Field(description="Whether the job is a consulting-focused role like 'Consultant' or 'Associate Consultant'. This excludes engineering roles and will mostly be true for positions that have 'Consulting' in the title or are directly related to consulting.")
+    is_engineering_job: bool = Field(description="Whether the job is an engineering-focused role like 'Software Engineer' or 'Data Scientist'. This excludes product and consulting roles and will mostly be true for positions that have 'Engineering' in the title or are directly related to engineering.")
+    is_other_job: bool = Field(description="Whether the job is not a product, consulting, or engineering role. This is a catch-all for jobs that don't fit into the other categories.")
+    years_experience: str = Field(description="Number of years of experience required for the job, inferred from the job description. This should be a number but can be a range like '0-1' or '1-3'.")
 
 @dataclass
 class OpenRoleAuditTask:

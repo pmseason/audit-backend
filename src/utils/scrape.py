@@ -33,6 +33,24 @@ async def get_job_postings(url: str, taskId: str, company_id: str):
         jobs = await job_data_agent.extract_page_content(job_postings)
         
         for job in jobs:
+            # Set site based on job type flags
+            if job.get("is_product_job") == True:
+                job["site"] = "apm"
+            elif job.get("is_consulting_job") == True:
+                job["site"] = "consulting"
+            elif job.get("is_engineering_job") == True:
+                job["site"] = "engineering"
+            elif job.get("is_other_job") == True:
+                job["site"] = "other"
+            else:
+                job["site"] = "other"
+            
+            # remove keys that dont align with db schema
+            job.pop("is_product_job")
+            job.pop("is_consulting_job")
+            job.pop("is_engineering_job")
+            job.pop("is_other_job")
+            
             job["company"] = company_id
             job["scraping_task"] = taskId
             job["hidden"] = True
