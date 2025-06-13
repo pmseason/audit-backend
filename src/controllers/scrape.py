@@ -70,8 +70,8 @@ async def post_scrape_results_controller():
         # Send out internal email with new job postings
         # generate apm payload: internshipEmailData, fullTimeEmailData
         # call directus endpoint
-        new_apm_jobs = await get_new_jobs_to_send_out("apm", last_broadcast_date)
-        new_consulting_jobs = await get_new_jobs_to_send_out("consulting", last_broadcast_date)
+        new_apm_jobs = await get_new_jobs_to_send_out("apm")
+        new_consulting_jobs = await get_new_jobs_to_send_out("consulting")
         
         apm = {
             "internshipData": [job for job in new_apm_jobs if job["jobType"] == "internship"],

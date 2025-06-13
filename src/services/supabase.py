@@ -249,7 +249,7 @@ def get_visa_text(visa: str) -> str:
     else:
         return "Visa Sponsored ?"
 
-async def get_new_jobs_to_send_out(site: str, last_broadcast_date: datetime):
+async def get_new_jobs_to_send_out(site: str):
     """Get the new jobs to send out with transformed data structure."""
     try:
         response = supabase.table("scraped_positions") \
@@ -257,7 +257,7 @@ async def get_new_jobs_to_send_out(site: str, last_broadcast_date: datetime):
             .eq("status", "open") \
             .eq("site", site) \
             .not_.is_("title", None) \
-            .gte("createdAt", last_broadcast_date.date().isoformat()) \
+            .gte("createdAt", datetime.now().date().isoformat()) \
             .execute()
             
         transformed_positions = []
