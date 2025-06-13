@@ -257,7 +257,7 @@ async def get_new_jobs_to_send_out(site: str, last_broadcast_date: datetime):
             .eq("status", "open") \
             .eq("site", site) \
             .not_.is_("title", None) \
-            .gte("lastUpdated", last_broadcast_date.date().isoformat()) \
+            .gte("createdAt", last_broadcast_date.date().isoformat()) \
             .execute()
             
         transformed_positions = []
