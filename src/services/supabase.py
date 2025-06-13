@@ -188,7 +188,7 @@ async def delete_open_role_audit_task(task_id: int):
 async def insert_scraped_jobs(jobs: List[dict]):
     """Insert scraped jobs for a specific task."""
     try:
-        response = supabase.table("positions") \
+        response = supabase.table("scraped_positions") \
             .insert(jobs) \
             .execute()
         return response.data
@@ -199,7 +199,7 @@ async def filter_jobs_to_scrape(urls: List[str]):
     """Filter jobs to scrape by urls that do not exist in the db"""
     try:
         
-        response = supabase.table("positions") \
+        response = supabase.table("scraped_positions") \
             .select("*") \
             .in_("url", urls) \
             .execute()
@@ -252,7 +252,7 @@ def get_visa_text(visa: str) -> str:
 async def get_new_jobs_to_send_out(site: str, last_broadcast_date: datetime):
     """Get the new jobs to send out with transformed data structure."""
     try:
-        response = supabase.table("positions") \
+        response = supabase.table("scraped_positions") \
             .select("*, company(*, logo(*))") \
             .eq("status", "open") \
             .eq("site", site) \
@@ -281,7 +281,7 @@ async def get_new_jobs_to_send_out(site: str, last_broadcast_date: datetime):
             
             transformed_positions.append(transformed_position)
             
-        return transformed_positions
+        return transformed_positions[:10]
     except APIError as e:
         raise Exception(f"Error getting new jobs to send out: {str(e)}")
 

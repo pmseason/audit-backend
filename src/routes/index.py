@@ -1,5 +1,6 @@
 from fastapi import APIRouter, status
 from src.controllers.index import health_check, HealthResponse
+from src.services.supabase import supabase
 
 router = APIRouter(
     prefix="",
@@ -20,4 +21,4 @@ async def get_health():
     Returns:
         HealthResponse: A response containing the status and message
     """
-    return await health_check() 
+    return await health_check()

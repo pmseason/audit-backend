@@ -42,64 +42,77 @@ async def post_scrape_results_controller():
         last_broadcast_date = datetime.fromisoformat(last_broadcast_time.replace('Z', '+00:00'))
         already_ran_today = last_broadcast_date.date() >= datetime.now().date()
         
+        if already_ran_today:
+            return {
+                "message": "Scrape broadcast already ran today",
+                "payload": {
+                    "lastBroadcastDate": last_broadcast_date
+                }
+            }
+        
+        
         tasks = await get_all_open_role_audit_tasks()
         
-        all_tasks_ran = all(
+        all_tasks_ran_today = all(
             datetime.fromisoformat(task["updated_at"].replace('Z', '+00:00')).date() >= datetime.now().date() and task["status"] in ["completed", "failed"]
             for task in tasks
         )
         
-        if not already_ran_today and all_tasks_ran:
-            # Send out internal email with new job postings
-            # generate apm payload: internshipEmailData, fullTimeEmailData
-            # call directus endpoint
-            new_apm_jobs = await get_new_jobs_to_send_out("apm", last_broadcast_date)
-            new_consulting_jobs = await get_new_jobs_to_send_out("consulting", last_broadcast_date)
-            
-            apm = {
-                "internshipData": [job for job in new_apm_jobs if job["jobType"] == "internship"],
-                "fullTimeData": [job for job in new_apm_jobs if job["jobType"] == "full-time"],
-                "site": "apm"
-            }
-            
-            consulting = {
-                "internshipData": [job for job in new_consulting_jobs if job["jobType"] == "internship"],
-                "fullTimeData": [job for job in new_consulting_jobs if job["jobType"] == "full-time"],
-                "site": "consulting"
-            }
-            
-            if len(apm["internshipData"]) > 0 or len(apm["fullTimeData"]) > 0:
-                # # Send email with new job postings via Directus flow
-                response = requests.post(
-                    "https://directus.apmseason.com/flows/trigger/28537cec-ec71-43b0-b78c-295c9181b2c5",
-                    json=apm
-                )
-            if response.status_code != 200:
-                logger.error(f"Error sending email: {response.text}")
-                raise Exception("Failed to send email with new job postings")
-            
-            if len(consulting["internshipData"]) > 0 or len(consulting["fullTimeData"]) > 0:
-                response = requests.post(
-                    "https://directus.apmseason.com/flows/trigger/28537cec-ec71-43b0-b78c-295c9181b2c5",
-                    json=consulting
-                )
-            
-            if response.status_code != 200:
-                logger.error(f"Error sending email: {response.text}")
-                raise Exception("Failed to send email with new job postings")
-            
-            await update_config_last_updated_time()
-            
+        if not all_tasks_ran_today:
             return {
-                "message": "Email sent successfully",
+                "message": "Today's scraping tasks have not completed yet",
                 "payload": {
-                    "apm": apm,
-                    "consulting": consulting
+                    "lastBroadcastDate": last_broadcast_date
                 }
             }
         
+
+        # Send out internal email with new job postings
+        # generate apm payload: internshipEmailData, fullTimeEmailData
+        # call directus endpoint
+        new_apm_jobs = await get_new_jobs_to_send_out("apm", last_broadcast_date)
+        new_consulting_jobs = await get_new_jobs_to_send_out("consulting", last_broadcast_date)
+        
+        apm = {
+            "internshipData": [job for job in new_apm_jobs if job["jobType"] == "internship"],
+            "fullTimeData": [job for job in new_apm_jobs if job["jobType"] == "full-time"],
+            "site": "apm"
+        }
+        
+        consulting = {
+            "internshipData": [job for job in new_consulting_jobs if job["jobType"] == "internship"],
+            "fullTimeData": [job for job in new_consulting_jobs if job["jobType"] == "full-time"],
+            "site": "consulting"
+        }
+        
+        if len(apm["internshipData"]) > 0 or len(apm["fullTimeData"]) > 0:
+            # # Send email with new job postings via Directus flow
+            response = requests.post(
+                "https://directus.apmseason.com/flows/trigger/28537cec-ec71-43b0-b78c-295c9181b2c5",
+                json=apm
+            )
+        if response.status_code != 200:
+            logger.error(f"Error sending email: {response.text}")
+            raise Exception("Failed to send email with new job postings")
+        
+        if len(consulting["internshipData"]) > 0 or len(consulting["fullTimeData"]) > 0:
+            response = requests.post(
+                "https://directus.apmseason.com/flows/trigger/28537cec-ec71-43b0-b78c-295c9181b2c5",
+                json=consulting
+            )
+        
+        if response.status_code != 200:
+            logger.error(f"Error sending email: {response.text}")
+            raise Exception("Failed to send email with new job postings")
+        
+        await update_config_last_updated_time()
+        
         return {
-           "message": "No new jobs to send out"
+            "message": "Email sent successfully",
+            "payload": {
+                "apm": apm,
+                "consulting": consulting
+            }
         }
          
     except Exception as e:
