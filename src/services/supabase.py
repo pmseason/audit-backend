@@ -270,7 +270,7 @@ async def get_new_jobs_to_send_out(site: str, last_broadcast_date: datetime):
                 'logoUrl': f"https://images.careerseason.com/{logo.get('filename_disk')}" if logo.get('filename_disk') else None,
                 'title': position.get('title'),
                 'url': position.get('url'),
-                'dateAddedText': get_date_added_text(position.get('dateAdded', datetime.now().isoformat())),
+                'dateAddedText': get_date_added_text(position.get('createdAt', datetime.now().isoformat())),
             }
             if position.get('salaryText'):
                 transformed_position['salaryText'] = position.get('salaryText')
