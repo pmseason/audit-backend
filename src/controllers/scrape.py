@@ -85,21 +85,19 @@ async def post_scrape_results_controller():
             "site": "consulting"
         }
         
-        if len(apm["internshipData"]) > 0 or len(apm["fullTimeData"]) > 0:
-            # # Send email with new job postings via Directus flow
-            response = requests.post(
-                "https://directus.apmseason.com/flows/trigger/28537cec-ec71-43b0-b78c-295c9181b2c5",
-                json=apm
-            )
+        # Send email with new job postings via Directus flow
+        response = requests.post(
+            "https://directus.apmseason.com/flows/trigger/28537cec-ec71-43b0-b78c-295c9181b2c5",
+            json=apm
+        )
         if response.status_code != 200:
             logger.error(f"Error sending email: {response.text}")
             raise Exception("Failed to send email with new job postings")
         
-        if len(consulting["internshipData"]) > 0 or len(consulting["fullTimeData"]) > 0:
-            response = requests.post(
-                "https://directus.apmseason.com/flows/trigger/28537cec-ec71-43b0-b78c-295c9181b2c5",
-                json=consulting
-            )
+        response = requests.post(
+            "https://directus.apmseason.com/flows/trigger/28537cec-ec71-43b0-b78c-295c9181b2c5",
+            json=consulting
+        )
         
         if response.status_code != 200:
             logger.error(f"Error sending email: {response.text}")
