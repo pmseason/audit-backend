@@ -4,7 +4,6 @@ from src.utils.logging_config import setup_logging, upload_logs_to_cloud
 from src.utils.utils import sanitize_url_for_filename
 from src.services.supabase import get_all_open_role_audit_tasks, get_last_scrape_broadcast, get_new_jobs_to_send_out, update_config_last_updated_time
 
-from src.controllers.audit import start_open_role_audit
 from src.services.cloud_tasks import create_task
 import asyncio
 from datetime import datetime

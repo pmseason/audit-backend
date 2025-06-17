@@ -6,4 +6,4 @@ COPY . .
 
 RUN uv sync --locked
 
-CMD ["uv", "run", "python", "-m", "src.app"]
+CMD ["uv", "run", "-m", "src.app"]

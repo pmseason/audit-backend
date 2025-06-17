@@ -3,10 +3,6 @@ from pydantic import BaseModel
 class TaskRequest(BaseModel):
     taskId: int
     type: str
-    url: str | None = None
-    jobId: str | None = None
-    extra_notes: str | None = None
-    site: str | None = None
     
     @property
     def is_closed_role_task(self) -> bool:

@@ -8,7 +8,7 @@ from loguru import logger
 from src.types.audit import ScrapedJobAgent
 from browserbase import Browserbase
 from playwright.async_api import async_playwright, Playwright
-from src.utils.utils import get_markdown_content
+from src.utils.utils import get_markdown_content, sanitize_url_for_filename, save_content_to_files
 
 load_dotenv(override=True)
 
@@ -18,7 +18,7 @@ class JobDataAgent:
         """Initialize the job data extraction agent."""
         self.client = openai.OpenAI()
 
-    async def fetch_markdown_contents(self, urls: List[str]) -> List[Dict[str, str]]:
+    async def fetch_markdown_contents(self, urls: List[str], main_url: str) -> List[Dict[str, str]]:
         """
         Fetch markdown content from multiple URLs using Browserbase.
         
@@ -43,7 +43,8 @@ class JobDataAgent:
                     try:
                         await page.goto(url)
                         html = await page.content()
-                        html, markdown_content = await get_markdown_content(html, url, "job_extraction")
+                        html, markdown_content = await get_markdown_content(html)
+                        save_content_to_files(html, markdown_content, f"logs/{sanitize_url_for_filename(main_url)}/{sanitize_url_for_filename(url)}/page")
                         logger.info(f"Fetched markdown content from {url}")
                         markdown_contents.append({
                             "url": url,
@@ -85,7 +86,7 @@ class JobDataAgent:
         
         return jobs
 
-    async def extract_page_content(self, urls: List[str]):
+    async def extract_page_content(self, urls: List[str], main_url: str):
         """
         Main method to extract job data from multiple URLs.
         
@@ -95,7 +96,7 @@ class JobDataAgent:
         Returns:
             List[Dict]: List of processed job data
         """
-        markdown_contents = await self.fetch_markdown_contents(urls)
+        markdown_contents = await self.fetch_markdown_contents(urls, main_url)
         return await self.process_markdown_contents(markdown_contents)
 
     async def parse_page_with_ai(self, markdown_content: str, source_url: str) -> Optional[ScrapedJobAgent]:

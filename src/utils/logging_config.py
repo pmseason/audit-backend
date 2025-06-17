@@ -18,6 +18,8 @@ def setup_logging(run_id: str):
     """
     # Remove default handler
     logger.remove()
+    # Ensure logs directory exists
+    os.makedirs(LOGS_DIR, exist_ok=True)
     
     # Add console handler with colors
     logger.add(
@@ -53,7 +55,7 @@ def setup_logging(run_id: str):
     
     return run_id
 
-async def upload_logs_to_cloud(run_id: str):
+async def upload_logs_to_cloud(run_id: str, cloud_prefix: str):
     """
     Upload log files to cloud storage.
     
@@ -66,7 +68,7 @@ async def upload_logs_to_cloud(run_id: str):
         logger.warning(f"No logs found for run {run_id}")
         return
     
-    log_files = list(run_log_dir.glob("*.log")) + list(run_log_dir.glob("*.txt"))
+    log_files = list(run_log_dir.glob("*.log")) + list(run_log_dir.glob("*.txt")) + list(run_log_dir.glob("*.html")) + list(run_log_dir.glob("*.md"))
     for log_file in log_files:
         try:
             with open(log_file, 'r') as f:
@@ -75,7 +77,7 @@ async def upload_logs_to_cloud(run_id: str):
             date_str = datetime.now().strftime("%Y%m%d")
             
             # Upload to cloud storage
-            cloud_path = f"logs/{date_str}/{run_id}/{log_file.name}"
+            cloud_path = f"{cloud_prefix}/{date_str}/{run_id}/{log_file.name}"
             await upload_file_to_bucket(
                 file_path=cloud_path,
                 content=content,

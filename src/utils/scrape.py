@@ -30,7 +30,7 @@ async def get_job_postings(url: str, taskId: str, company_id: str):
         logger.info(f"Adding {len(job_postings)} job postings to scrape")
         
         job_data_agent = JobDataAgent()
-        jobs = await job_data_agent.extract_page_content(job_postings)
+        jobs = await job_data_agent.extract_page_content(job_postings, url)
         
         for job in jobs:
             # Set site based on job type flags
@@ -53,7 +53,6 @@ async def get_job_postings(url: str, taskId: str, company_id: str):
             
             job["company"] = company_id
             job["scraping_task"] = taskId
-            job["hidden"] = True
         
         if jobs and len(jobs) > 0:
             await insert_scraped_jobs(jobs)

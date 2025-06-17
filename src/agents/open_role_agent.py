@@ -1,19 +1,12 @@
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
-import asyncio
-import re
-from browser_use import BrowserConfig, Browser, Controller, Agent, BrowserContextConfig, ActionResult
+from browser_use import Controller, Agent, ActionResult
 from pydantic import BaseModel, Field
-from typing import Literal, Optional
-from src.agents.agent_logging import record_activity
+from typing import Optional
 from src.services.browserbase import setup_browser
 from markdownify import markdownify as md
-from src.services.cloud_storage import upload_file_to_bucket
-import os
 from playwright.async_api import Page
-from playwright.sync_api import sync_playwright, Playwright
-from browserbase import Browserbase
-from src.utils.utils import get_markdown_content, sanitize_url_for_filename
+from src.utils.utils import get_markdown_content, sanitize_url_for_filename, save_content_to_files
 from loguru import logger
 
 # Load environment variables
@@ -105,7 +98,8 @@ async def find_open_roles(url: str):
         
         # Strip img and script tags from HTML before processing
         if html:
-            html, markdown_content = await get_markdown_content(html, url, "url_extraction")
+            html, markdown_content = await get_markdown_content(html)
+            save_content_to_files(html, markdown_content, f"logs/{clean_url}/page")
         
         tokens = history.total_input_tokens()
         logger.info(f'Tokens: {tokens}')
