@@ -48,3 +48,35 @@ async def update_position_status(position_id: str, request: UpdatePositionStatus
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get(
+    "/scraped-positions",
+    summary="Get positions scraped on a specific date",
+    description="Retrieves all positions that were scraped on the given date",
+    responses={
+        200: {"description": "Successfully retrieved scraped positions"},
+        400: {"description": "Invalid date format"},
+        500: {"description": "Internal server error"}
+    }
+)
+async def get_scraped_positions(date: str):
+    try:
+        # Validate date format
+        try:
+            datetime.strptime(date, '%Y-%m-%d')
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+
+        # Query positions scraped on the given date
+        result = supabase.from_("scraped_positions") \
+            .select("*, company(*, logo(filename_disk))") \
+            .gte("createdAt", date) \
+            .lt("createdAt", f"{date}T23:59:59") \
+            .execute()
+
+        return result.data or []
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

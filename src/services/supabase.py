@@ -137,7 +137,7 @@ async def get_all_open_role_audit_tasks():
     """Fetch all open role audit tasks."""
     try:
         response = supabase.table("open_role_audit_tasks") \
-            .select("*") \
+            .select("*, company(*, logo(filename_disk))") \
             .execute()
             
         return response.data
