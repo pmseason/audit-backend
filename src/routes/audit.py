@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Body
-from typing import List, Optional
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException
+from loguru import logger
 from src.controllers.audit import (
+    get_all_closed_role_audit_tasks,
     start_closed_role_audit,
 )
 
@@ -9,15 +9,6 @@ router = APIRouter(
     prefix="/audit",
     tags=["Audit"]
 )
-
-class StartClosedRoleAuditRequest(BaseModel):
-    taskIds: List[int]
-
-class AddOpenRoleAuditRequest(BaseModel):
-    url: str
-
-class StartOpenRoleAuditRequest(BaseModel):
-    taskIds: List[int]
 
 @router.post("/start/closed",
     summary="Start closed role audit",
@@ -31,3 +22,19 @@ class StartOpenRoleAuditRequest(BaseModel):
 )
 async def start_closed_role_audit_route():
     return await start_closed_role_audit()
+
+@router.get("/closed",
+    summary="Get all closed role audit tasks",
+    description="Retrieves all closed role audit tasks with their associated job and company information",
+    responses={
+        200: {"description": "Successfully retrieved all closed role audit tasks"},
+        500: {"description": "Internal server error"}
+    }
+)
+async def get_all_closed_role_audit_tasks_route():    
+    try:
+        tasks = await get_all_closed_role_audit_tasks()
+        return tasks
+    except Exception as error:
+        logger.error(f"Error getting all closed role audit tasks: {error}")
+        raise HTTPException(status_code=500, detail="Internal server error")

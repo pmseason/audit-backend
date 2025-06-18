@@ -1,6 +1,6 @@
 from loguru import logger
 from src.types.tasks import TaskRequest
-from src.services.supabase import update_closed_role_task_status, update_open_role_task_status, insert_scraped_jobs, get_open_role_audit_tasks_by_ids, get_closed_role_audit_tasks_by_ids
+from src.services.supabase import update_closed_role_task_status, update_open_role_task_status, insert_scraped_jobs, get_open_role_audit_tasks_by_ids, get_closed_role_audit_tasks_by_ids, upload_screenshot_to_storage
 from src.types.audit import AuditStatus
 from src.agents.closed_role_agent import ClosedRoleAgent
 from src.agents.open_role_agent import find_open_roles
@@ -36,13 +36,15 @@ async def handle_closed_role_audit_task(task_request: TaskRequest):
         if not response:
             raise Exception("No result from check_closed_role")
         
-        result, screenshot = response
+        result, screenshot, screenshot_bytes = response
+        screenshot_url = await upload_screenshot_to_storage(screenshot_bytes, f"closed_role/{task_request.taskId}.png")
+        
         
         # Log task completion
         await update_closed_role_task_status([task_request.taskId], AuditStatus.COMPLETED, "Task is complete", {
             "result": result.result,
             "justification": result.justification,
-            "screenshot": screenshot
+            "screenshot": screenshot_url
         })
         
         logger.success(f"Task {task_request.taskId} completed successfully")
@@ -53,7 +55,7 @@ async def handle_closed_role_audit_task(task_request: TaskRequest):
         error_message = str(error)
         logger.error(f"Error processing task {task_request.taskId}: {error_message}")
         await update_closed_role_task_status([task_request.taskId], AuditStatus.FAILED, error_message)
-        await upload_logs_to_cloud(clean_url, f"closed_role_audit")
+        # await upload_logs_to_cloud(clean_url, f"closed_role_audit")
         raise
     
 async def handle_open_role_audit_task(task_request: TaskRequest):

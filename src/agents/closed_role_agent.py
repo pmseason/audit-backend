@@ -22,7 +22,7 @@ class ClosedRoleAgent:
         """Initialize the closed role checking agent."""
         self.client = openai.OpenAI()
 
-    async def check_job_status(self, url: str) -> tuple[ClosedRoleAuditResult, str]:
+    async def check_job_status(self, url: str) -> tuple[ClosedRoleAuditResult, str, bytes]:
         """
         Check if a job posting is still open or closed.
         
@@ -102,7 +102,7 @@ class ClosedRoleAgent:
                     result = response.output_parsed
                     logger.info(f"Used {response.usage.total_tokens} tokens to check job status for {url}")
                     
-                    return result, screenshot_base64
+                    return result, screenshot_base64, screenshot
                     
                 except Exception as e:
                     logger.error(f"Error checking job status for {url}: {str(e)}")

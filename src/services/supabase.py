@@ -16,6 +16,36 @@ if not supabase_url or not supabase_key:
 
 supabase: Client = create_client(supabase_url, supabase_key)
 
+
+async def upload_screenshot_to_storage(screenshot: bytes, filename: str) -> str:
+    """
+    Upload a base64 encoded screenshot to Supabase storage.
+    
+    Args:
+        screenshot_base64 (str): Base64 encoded screenshot data
+        filename (str): Name to save the file as
+        
+    Returns:
+        str: Public URL of the uploaded file
+    """
+    try:
+        # Remove base64 prefix if present
+        # Upload to screenshots bucket
+        response = supabase.storage.from_("audit").upload(
+            path=filename,
+            file=screenshot,
+            file_options={"contentType": "image/png", "upsert": "true"}
+        )
+        
+        # Get public URL
+        public_url = supabase.storage.from_("audit").get_public_url(filename)
+        return public_url
+        
+    except Exception as e:
+        logger.error(f"Error uploading screenshot to storage: {str(e)}")
+        raise Exception(f"Failed to upload screenshot: {str(e)}")
+
+
 async def get_open_jobs():
     """Fetch all open jobs from the positions table."""
     logger.info("Fetching open jobs")

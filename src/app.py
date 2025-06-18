@@ -31,12 +31,11 @@ app.add_middleware(
 )
 
 # Import and include routers
-from src.routes import index_router, tasks, audit, instances_router, scrape
+from src.routes import index_router, tasks, audit, scrape
 
 app.include_router(index_router)
 app.include_router(tasks.router)
 app.include_router(audit.router)
-app.include_router(instances_router)
 app.include_router(scrape.router)
 if __name__ == "__main__":
     import uvicorn
