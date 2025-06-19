@@ -48,6 +48,65 @@ async def update_position_status(position_id: str, request: UpdatePositionStatus
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.put(
+    "/{scraped_position_id}/promote",
+    summary="Promote scraped position to positions table",
+    description="Takes a scraped_position id and adds the data to the positions table",
+    responses={
+        200: {"description": "Position promoted successfully"},
+        404: {"description": "Scraped position not found"},
+        409: {"description": "Position already exists in positions table"},
+        500: {"description": "Internal server error"}
+    }
+)
+async def promote_scraped_position(scraped_position_id: str):
+    try:
+        # Get the scraped position data
+        scraped_position = supabase.from_("scraped_positions").select("*, company(*)").eq("id", scraped_position_id).execute()
+        if not scraped_position.data:
+            raise HTTPException(status_code=404, detail="Scraped position not found")
+        
+        scraped_data = scraped_position.data[0]
+        
+        # Check if position already exists in positions table (by URL)
+        existing_position = supabase.from_("positions").select("*").eq("url", scraped_data["url"]).execute()
+        if existing_position.data:
+            raise HTTPException(status_code=409, detail="Position already exists in positions table")
+        
+        # Map scraped_position fields to positions table fields
+        position_data = {
+            "title": scraped_data["title"],
+            "url": scraped_data["url"],
+            "description": scraped_data["description"],
+            "jobType": scraped_data["jobType"],
+            "status": "open",  # Default to open when promoting
+            "company": scraped_data["company"]["id"],
+            "salaryText": scraped_data["salaryText"],
+            "visaSponsored": scraped_data["visaSponsored"],
+            "location": scraped_data["location"],
+            "other": scraped_data["other"],
+            "years_experience": scraped_data["years_experience"],
+            "site": scraped_data["site"],
+            "hidden": False,  # Default to visible
+            "scraped_position": scraped_position_id
+        }
+        
+        # Insert into positions table
+        result = supabase.from_("positions").insert(position_data).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Failed to promote position")
+            
+        return {
+            "message": "Position promoted successfully", 
+            "data": result.data[0]
+        }
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
 @router.get(
     "/scraped-positions",
@@ -69,13 +128,49 @@ async def get_scraped_positions(date: str):
 
         # Query positions scraped on the given date
         result = supabase.from_("scraped_positions") \
-            .select("*, company(*, logo(filename_disk))") \
+            .select("*, company(*, logo(filename_disk)), positions(id)") \
             .gte("createdAt", date) \
             .lt("createdAt", f"{date}T23:59:59") \
+            .order("createdAt") \
             .execute()
 
         return result.data or []
 
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete(
+    "/{scraped_position_id}",
+    summary="Delete positions by scraped position ID",
+    description="Deletes all positions where the scraped_position field matches the provided scraped_position_id",
+    responses={
+        200: {"description": "Positions deleted successfully"},
+        404: {"description": "No positions found with the given scraped_position_id"},
+        500: {"description": "Internal server error"}
+    }
+)
+async def delete_positions_by_scraped_position_id(scraped_position_id: str):
+    try:
+        # First, check if any positions exist with this scraped_position_id
+        existing_positions = supabase.from_("positions").select("id").eq("scraped_position", scraped_position_id).execute()
+        
+        if not existing_positions.data:
+            raise HTTPException(status_code=404, detail="No positions found with the given scraped_position_id")
+        
+        # Delete all positions with the matching scraped_position_id
+        result = supabase.from_("positions").delete().eq("scraped_position", scraped_position_id).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Failed to delete positions")
+            
+        return {
+            "message": f"Successfully deleted {len(result.data)} position(s)",
+            "deleted_count": len(result.data),
+            "data": result.data
+        }
+        
     except HTTPException as he:
         raise he
     except Exception as e:
