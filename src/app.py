@@ -24,7 +24,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://audit.apmseason.com"],  # In production, replace with specific origins
+    allow_origins=["http://localhost:5173", "https://audit.apmseason.com", "https://audit-ui-537386600621.us-central1.run.app"],  # In production, replace with specific origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
