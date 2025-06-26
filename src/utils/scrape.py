@@ -10,9 +10,9 @@ from fastapi import HTTPException
         
         
         
-async def get_job_postings(url: str, taskId: str, company_id: str):
+async def get_job_postings(url: str, taskId: str, company_id: str, role_type: str, site: str, job_title: str):
     try:
-        html, markdown_content = await find_open_roles(url)
+        html, markdown_content = await find_open_roles(url, job_title)
         
         if not html or not markdown_content:
             logger.error(f"No response received for {url}")

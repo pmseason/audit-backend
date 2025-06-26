@@ -47,29 +47,46 @@ async def dismiss_popup(params: DismissPopupParams, page: Page) -> ActionResult:
     return ActionResult(extracted_content="No selectors provided for dismissal")
 
 MESSAGE_CONTEXT = """
-You are a helpful assistant that will help scrape job listings. All you have to do
-is navigate to the bottom of each page to load all jobs into the current DOM. If a cookie banner or popup appears, dismiss it.
-If you see a "Load more" button at the bottom of the page, click it a few times.
-Do not navigate away from the site, or click any other links, including pagination.
+You are a helpful assistant that will help search for and load job listings. You will be provided with:
+- job_title: The title or role to search for
+- url: The url of the page you are on
+
+Do not:
+- Navigate away from the search results page
+- Click on individual job listings
+- Click pagination links
+
+The goal is to get all relevant job listing links loaded into the current page DOM for later scraping.
 """
 
-async def on_step_end(agent: Agent):
+async def on_step_end(agent: Agent, original_url: str):
     html = await agent.browser_context.get_page_html()
     page = await agent.browser_context.get_agent_current_page()
-    
-    current_url = page.url
-    visit_log = agent.state.history.urls()
-    previous_url = visit_log[-2] if len(visit_log) >= 2 else None
-    
-    if current_url != previous_url:
-        # Store only the current HTML per page
-        agent.html = html
-
-async def find_open_roles(url: str):
+    agent.html = html
+    # current_url = page.url
+    # if current_url == original_url:
+    #     logger.info(f"Saving HTML for original URL: {current_url}")
+    #     agent.html = html
+    # else:
+    #     logger.info(f"Skipping HTML save for non-original URL: {current_url}")
+async def find_open_roles(url: str, job_title: str):
     clean_url = sanitize_url_for_filename(url)
     initial_actions = [
         {'open_tab': {'url': url}},
     ]
+    
+    # Define task instructions dynamically with the job_title
+    task_instructions = f"""
+Your task is to:
+1. Locate the job search form on the page
+2. Enter the job_title: {job_title} into the primary search field.
+3. Leave the other filters/fields blank
+4. Submit the search form
+5. Hit enter to submit the search, or click the search button
+6. Once results load, scroll to bottom and click any "Load More" buttons to ensure all matching jobs are loaded in the DOM
+7. Dismiss any cookie banners or popups that appear
+8. Do not navigate away from the site, or click any other links, including pagination.
+"""
     
     browser = None
     context = None
@@ -79,7 +96,8 @@ async def find_open_roles(url: str):
         browser, _ = await setup_browser()
         
         agent = Agent(
-            task=MESSAGE_CONTEXT,
+            task=task_instructions,
+            context=MESSAGE_CONTEXT,
             llm=llm,
             browser=browser,
             initial_actions=initial_actions,
@@ -89,8 +107,8 @@ async def find_open_roles(url: str):
         )
         
         history = await agent.run(
-            max_steps=8,
-            on_step_end=on_step_end
+            max_steps=10,
+            on_step_end=lambda agent: on_step_end(agent, url)
         )
         
         # Get the final HTML from the last step
