@@ -4,6 +4,7 @@ from typing import Literal
 from src.services.supabase import supabase
 from src.types.jobs import JobStatus
 from datetime import datetime
+from src.services.directus import add_position_to_directus, update_position_in_directus
 
 router = APIRouter(
     prefix="/positions",
@@ -32,17 +33,19 @@ async def update_position_status(position_id: str, request: UpdatePositionStatus
             raise HTTPException(status_code=404, detail="Position not found")
 
         # Update the position status
-        closed_on = datetime.now().strftime("%m/%d/%y") if request.status == "closed" else None
-            
-        result = supabase.from_("positions").update({
-            "status": request.status,
-            "closedOn": closed_on
-        }).eq("id", position_id).execute()
+        # result = supabase.from_("positions").update({
+        #     "status": request.status
+        # }).eq("id", position_id).execute()
         
-        if not result.data:
+        # we need to directly post to directus
+        result = await update_position_in_directus(position_id, {
+            "status": request.status
+        })
+        
+        if not result:
             raise HTTPException(status_code=500, detail="Failed to update position status")
             
-        return {"message": "Position status updated successfully", "data": result.data[0]}
+        return {"message": "Position status updated successfully"}
         
     except HTTPException as he:
         raise he
@@ -93,14 +96,16 @@ async def promote_scraped_position(scraped_position_id: str):
         }
         
         # Insert into positions table
-        result = supabase.from_("positions").insert(position_data).execute()
+        # result = supabase.from_("positions").insert(position_data).execute()
         
-        if not result.data:
+        # we need to directly post to directus
+        result = await add_position_to_directus(position_data)
+        
+        if not result:
             raise HTTPException(status_code=500, detail="Failed to promote position")
             
         return {
-            "message": "Position promoted successfully", 
-            "data": result.data[0]
+            "message": "Position promoted successfully"
         }
         
     except HTTPException as he:
