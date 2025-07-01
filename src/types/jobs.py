@@ -3,6 +3,13 @@ from dataclasses import dataclass
 from typing import Optional, List, Literal, Union
 from datetime import datetime
 
+class EducationLevel(str, Enum):
+    BACHELOR = "bachelors"
+    MASTER = "masters"
+    PHD = "phd"
+    HIGH_SCHOOL = "high school"
+    OTHER = "other"
+
 
 class Industry(str, Enum):
     TECH = "tech"
@@ -54,12 +61,14 @@ class Job:
     title: str
     season: str
     url: str
+    min_years_experience: Optional[int] = None
     description: Optional[str] = None
     hidden: bool = False
-    created_at: str = ""
+    created_at: str = ""    
     date_added: str = ""
     salary_text: str = ""
     visa_sponsored: VisaSponsor = VisaSponsor.UNSURE
+    min_education_level: Optional[EducationLevel] = None
 
 
 @dataclass

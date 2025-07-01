@@ -2,7 +2,7 @@ from enum import Enum
 from dataclasses import dataclass
 from typing import Literal, List
 from pydantic import BaseModel, Field
-from .jobs import Job, VisaSponsor, JobStatus, RoleType
+from .jobs import Job, VisaSponsor, JobStatus, RoleType, EducationLevel
 
 
 class AuditStatus(str, Enum):
@@ -18,6 +18,7 @@ class SiteType(str, Enum):
     APM = "apm"
     CONSULTING = "consulting"
     OTHER = "other"
+
 
 
 @dataclass
@@ -61,7 +62,8 @@ class ScrapedJobAgent(BaseModel):
     is_consulting_job: bool = Field(description="Whether the job is a consulting-focused role like 'Consultant' or 'Associate Consultant'. This excludes engineering roles and will mostly be true for positions that have 'Consulting' in the title or are directly related to consulting.")
     is_engineering_job: bool = Field(description="Whether the job is an engineering-focused role like 'Software Engineer' or 'Data Scientist'. This excludes product and consulting roles and will mostly be true for positions that have 'Engineering' in the title or are directly related to engineering.")
     is_other_job: bool = Field(description="Whether the job is not a product, consulting, or engineering role. This is a catch-all for jobs that don't fit into the other categories.")
-    years_experience: str = Field(description="Number of years of experience required for the job, inferred from the job description. This should be a number but can be a range like '0-1' or '1-3'.")
+    min_education_level: EducationLevel = Field(description="Minimum education level required for the job, inferred from the job description. This should be a string like 'bachelors' or 'masters'.")
+    min_years_experience: int = Field(description="Minimum years of experience required for the job, inferred from the job description. This must be a number.")
 
 @dataclass
 class OpenRoleAuditTask:

@@ -125,6 +125,8 @@ class JobDataAgent:
            - salaryText: Salary information in format like "$100 - $130k"
            - visaSponsored: Must be either "yes", "no", or "unknown"
            - status: Current status of the job posting
+           - min_years_experience: Minimum years of experience required for the job, inferred from the job description. This must be a number.
+           - min_education_level: Minimum education level required for the job, inferred from the job description. This must be a string like "bachelors", "masters", "phd", "high school", or "other".
         2. For job categorization, determine and set the appropriate boolean flags:
            - is_product_job: True for product-focused roles (e.g., Product Manager, APM)
            - is_consulting_job: True for consulting roles (e.g., Consultant, Associate Consultant)

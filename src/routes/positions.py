@@ -89,14 +89,12 @@ async def promote_scraped_position(scraped_position_id: str):
             "visaSponsored": scraped_data["visaSponsored"],
             "location": scraped_data["location"],
             "other": scraped_data["other"],
-            "years_experience": scraped_data["years_experience"],
             "site": scraped_data["site"],
             "hidden": False,  # Default to visible
-            "scraped_position": scraped_position_id
+            "scraped_position": scraped_position_id,
+            "min_years_experience": scraped_data["min_years_experience"],
+            "min_education_level": scraped_data["min_education_level"]
         }
-        
-        # Insert into positions table
-        # result = supabase.from_("positions").insert(position_data).execute()
         
         # we need to directly post to directus
         result = await add_position_to_directus(position_data)
