@@ -130,11 +130,10 @@ class JobDataAgent:
         2. For job categorization, determine and set the appropriate boolean flags:
            - is_product_job: True for product-focused roles (e.g., Product Manager, APM)
            - is_consulting_job: True for consulting roles (e.g., Consultant, Associate Consultant)
-           - is_engineering_job: True for engineering roles (e.g., Software Engineer, Data Scientist, Architect)
+           - is_swe_job: True for software engineering roles (e.g., Software Engineer, Software Developer, Architect)
            - is_other_job: True if none of the above categories apply
-        3. Extract years_experience from the job description, using formats like "0-1" or "1-3"
-        4. If certain information is not available, leave the field blank or use appropriate default values
-        5. Ensure all extracted data matches the expected format and types defined in the ScrapedJobAgent model
+        3. If certain information is not available, leave the field blank or use appropriate default values
+        4. Ensure all extracted data matches the expected format and types defined in the ScrapedJobAgent model
         
         Markdown Content:
         {markdown_content}

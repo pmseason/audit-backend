@@ -38,8 +38,8 @@ async def get_job_postings(url: str, taskId: str, company_id: str, role_type: st
                 job["site"] = "apm"
             elif job.get("is_consulting_job") == True:
                 job["site"] = "consulting"
-            elif job.get("is_engineering_job") == True:
-                job["site"] = "engineering"
+            elif job.get("is_swe_job") == True:
+                job["site"] = "swe"
             elif job.get("is_other_job") == True:
                 job["site"] = "other"
             else:
@@ -48,7 +48,7 @@ async def get_job_postings(url: str, taskId: str, company_id: str, role_type: st
             # remove keys that dont align with db schema
             job.pop("is_product_job")
             job.pop("is_consulting_job")
-            job.pop("is_engineering_job")
+            job.pop("is_swe_job")
             job.pop("is_other_job")
             
             job["company"] = company_id
