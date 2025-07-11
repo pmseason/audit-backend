@@ -63,12 +63,6 @@ async def on_step_end(agent: Agent, original_url: str):
     html = await agent.browser_context.get_page_html()
     page = await agent.browser_context.get_agent_current_page()
     agent.html = html
-    # current_url = page.url
-    # if current_url == original_url:
-    #     logger.info(f"Saving HTML for original URL: {current_url}")
-    #     agent.html = html
-    # else:
-    #     logger.info(f"Skipping HTML save for non-original URL: {current_url}")
 async def find_open_roles(url: str, job_title: str):
     clean_url = sanitize_url_for_filename(url)
     initial_actions = [

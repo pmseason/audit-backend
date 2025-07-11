@@ -4,7 +4,6 @@ from src.controllers.audit import (
     get_all_closed_role_audit_tasks,
     start_closed_role_audit,
     start_open_role_audit,
-    post_open_role_audit_results,
 )
 from src.services.supabase import get_all_open_role_audit_tasks
 
@@ -39,17 +38,6 @@ async def start_closed_role_audit_route():
 )
 async def scrape_open_jobs():
     return await start_open_role_audit()
-
-@router.post("/results",
-    summary="Get scrape results",
-    description="Returns the current status of scrape tasks",
-    responses={
-        200: {"description": "Successfully retrieved scrape status"},
-        500: {"description": "Internal server error"}
-    }
-)
-async def post_scrape_results():
-    return await post_open_role_audit_results()
 
 
 @router.get("/closed",
